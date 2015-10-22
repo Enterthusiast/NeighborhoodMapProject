@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Map</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css"></style>
+</head>
+<body>
+    <div class="flex-container">
+      <div class="menu">
+        <div class="flex-row">
+          <div class="filter-input">
+            <input class="filter-text" type="text" value="Type here to filter">
+            <input class="filter-submit" type="submit" value="Filter">
+          </div>
+          <div class="filter-marker">
+            <div class="result-marker">
+              <h2>Result:<h2>
+              <ul data-bind="foreach: markerArray">
+                <li>
+                  <span data-bind="text: title"></span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="map">
+        <div class="flex-row">
+          <div class="mobile-topbar"></div>
+          <div id="map"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/lib/knockout-3.3.0.js"></script>
+    <script src="js/model/model.js"></script>
+    <script src="js/modelview/modelview.js"></script>
+
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9V681P6SnJXI-5glxGhYipuRb9QiDtHM&callback=Controller.map.Init">
+    </script>
+</body>
+</html>
