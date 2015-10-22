@@ -10,13 +10,13 @@
       <div class="menu">
         <div class="flex-row">
           <div class="filter-input">
-            <input class="filter-text" type="text" value="Type here to filter">
+            <input class="filter-text" data-bind="textInput: filter">
             <input class="filter-submit" type="submit" value="Filter">
           </div>
           <div class="filter-marker">
             <div class="result-marker">
               <h2>Result:<h2>
-              <ul data-bind="foreach: markerArray">
+              <ul data-bind="foreach: filteredMarkerArray">
                 <li>
                   <span data-bind="text: title"></span>
                 </li>
@@ -38,7 +38,7 @@
     <script src="js/modelview/modelview.js"></script>
 
     <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9V681P6SnJXI-5glxGhYipuRb9QiDtHM&callback=Controller.map.Init">
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9V681P6SnJXI-5glxGhYipuRb9QiDtHM&callback=Controller.Init">
     </script>
 </body>
 </html>
