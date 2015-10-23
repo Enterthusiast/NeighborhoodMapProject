@@ -80,18 +80,24 @@ var Controller = (function() {
 			return filteredMarkerArray;
 		},
 
-				// Animate a marker
-		AnimateMarker : function(markerData) {
+		// Animate a marker
+		HighlightMarker : function(markerData) {
+			// TODO : store timeout outside of the function so they can be cleared (prevent a minor visual glitch)
+
 			// Stop any other animation
 			self.map.markers.forEach(function(marker) {
-				marker.setAnimation(null);
+				// We only stop ongoing animation and we won't stop the clicked marker animation (if any)
+				if(marker.animating === true && marker !== markerData) {
+					marker.setAnimation(null);
+				}
 			});
-			// Animate the desired marker
-			markerData.setAnimation(google.maps.Animation.BOUNCE);
-			// Stop anymation after a short time
-			setTimeout(function() {
-				markerData.setAnimation(null);
-			}, 1400);
+			// Animate the desired marker (only if not animating)
+			if(markerData.animation === false || !markerData.animation) {
+				markerData.setAnimation(google.maps.Animation.BOUNCE);
+				setTimeout(function() {
+						markerData.setAnimation(null);
+					}, 1400);
+			}
 		},
 
 		MarkerClicked : function(event) {
@@ -101,7 +107,7 @@ var Controller = (function() {
 			self.map.markers.forEach(function(marker) {
 				// Looking for the clicked marker by its position (Latitude & Longitude)
 				if(marker.position === event.latLng) {
-					self.map.AnimateMarker(marker);
+					self.map.HighlightMarker(marker);
 					self.map.OpenInfoWindow(self.map.infoWindows[count], marker);
 				}
 				count = count + 1;
@@ -156,6 +162,6 @@ var ViewModel = function() {
 	});
 
 	this.animAndOpenMarker = function(markerData) {
-		Controller.map.AnimateMarker(markerData);
+		Controller.map.HighlightMarker(markerData);
 	};
 };
