@@ -2,6 +2,35 @@ var Model = {
 
 	googlemaps : {
 		map : null,
+		infowindows : [
+			{
+				content: "Jardin du Luxembourg"
+			},
+			{
+				content: "Gaumont Parnasse"
+			},
+			{
+				content: "Falstaff - Bar à bière"
+			},
+			{
+				content: "Librairie Album - Manga & BD"
+			},
+			{
+				content: "Librairie Album - Comics & Figurine"
+			},
+			{
+				content: "Pulp Comics - Boutique Star Wars"
+			},
+			{
+				content: "Place du marché Maubert - Jeudi & Samedi"
+			},
+			{
+				content: "Boucherie"
+			},
+			{
+				content: "Fromagerie"
+			}
+		],
 		markers : [
 			{
 				position: {lat: 48.84620, lng: 2.33715},

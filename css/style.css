@@ -38,7 +38,7 @@ html, body {
 	
 }
 .filter-marker {
-	
+	cursor: pointer;
 }
 
 .mobile-topbar {
