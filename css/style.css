@@ -33,7 +33,7 @@ html, body {
 }
 
 .menu {
-	max-width: 280px;
+	width: 280px;
 	height: 100%;
 	color: white;
 	background-color: black;
