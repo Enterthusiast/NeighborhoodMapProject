@@ -2,33 +2,34 @@ var Model = {
 
 	googlemaps : {
 		map : null,
+		service : null,
 		infowindows : [
 			{
-				content: "Jardin du Luxembourg"
+				placeId: "ChIJe2jeNttx5kcRi_mJsGHdkQc"
 			},
 			{
-				content: "Gaumont Parnasse"
+				placeId: "ChIJMxtaOMxx5kcR28SQEfSygUc"
 			},
 			{
-				content: "Falstaff - Bar à bière"
+				placeId: "ChIJOzl9Icxx5kcRWcga16oXZEw"
 			},
 			{
-				content: "Librairie Album - Manga & BD"
+				placeId: "ChIJxy57Nudx5kcRbGtimYdLcrk"
 			},
 			{
-				content: "Librairie Album - Comics & Figurine"
+				placeId: "ChIJxy57Nudx5kcRcfSt_e_iADU"
 			},
 			{
-				content: "Pulp Comics - Boutique Star Wars"
+				placeId: "ChIJkYSjLedx5kcRaNJBiMaJRfk"
 			},
 			{
-				content: "Place du marché Maubert - Jeudi & Samedi"
+				placeId: "ChIJKZtiueZx5kcRl9zQESU6I9A"
 			},
 			{
-				content: "Boucherie"
+				placeId: "ChIJ6_YgoOZx5kcRx_kUrl7wU7g"
 			},
 			{
-				content: "Fromagerie"
+				placeId: "ChIJ4fRivuZx5kcR_nMndA0Lv24"
 			}
 		],
 		markers : [

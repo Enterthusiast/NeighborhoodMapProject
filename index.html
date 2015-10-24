@@ -18,7 +18,7 @@
               <h2>Result:<h2>
               <ul data-bind="foreach: filteredMarkerArray">
                 <li>
-                  <span data-bind="text: title, click: $parent.animAndOpenMarker"></span>
+                  <span data-bind="text: title, click: $parent.HighlightMarker"></span>
                 </li>
               </ul>
             </div>
@@ -35,10 +35,11 @@
 
     <script src="js/lib/knockout-3.3.0.js"></script>
     <script src="js/model/model.js"></script>
-    <script src="js/modelview/modelview.js"></script>
+    <script src="js/view/view.js"></script>
+    <script src="js/viewmodel/viewmodel.js"></script>
 
     <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9V681P6SnJXI-5glxGhYipuRb9QiDtHM&callback=Controller.Init">
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9V681P6SnJXI-5glxGhYipuRb9QiDtHM&libraries=places&callback=Controller.Init"></script>
     </script>
 </body>
 </html>

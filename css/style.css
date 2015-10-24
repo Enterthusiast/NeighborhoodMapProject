@@ -52,3 +52,24 @@ html, body {
 	height: calc(100% - 50px);
 	background-color: red;
 }
+
+.infwin-img {
+	margin-left: auto;
+	margin-right: auto;
+	width: 200px;
+}
+.infwin-name {
+	font-weight: bold;
+}
+.infwin-adress {
+
+}
+.infwin-phone {
+
+}
+.infwin-rating {
+
+}
+.infwin-website {
+
+}
