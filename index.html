@@ -2,23 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Map</title>
-    <link rel="stylesheet" type="text/css" href="css/style.css"></style>
+    <link href='https://fonts.googleapis.com/css?family=Roboto:100' rel='stylesheet' type='text/css'>
+    <link href="css/style.css" rel="stylesheet" type="text/css">
 </head>
 <body>
     <div class="flex-container">
       <div class="menu">
         <div class="flex-row">
-          <div class="filter-input">
-            <input class="filter-text" data-bind="textInput: filter">
-            <input class="filter-submit" type="submit" value="Filter">
+          <div class="filter-div">
+            <div class="filter-input">
+              <input class="filter-text" data-bind="textInput: filter" placeholder="Type to filter the list">
+            </div>
           </div>
           <div class="filter-marker">
+            <h2 class= "result-title">Places I like in my Neighborhood</h2>
             <div class="result-marker">
-              <h2>Result:<h2>
               <ul data-bind="foreach: filteredMarkerArray">
                 <li>
-                  <span data-bind="text: title, click: $parent.HighlightMarker"></span>
+                  <span data-bind="text: title, click: $parent.HighlightMarker"></span><input class="result-check" checked="true" type="checkbox">
                 </li>
               </ul>
             </div>
