@@ -127,8 +127,7 @@ var Controller = (function() {
 
 		AddOneInfoWindow : function(infowindowInfo, arrayIndex) {
 			// TODO: webworkers ?
-			// TODO : Add Yelp info ?
-			// TODO: put conditions before adding undefined data
+			// TODO: Add Yelp info ?
 			Model.googlemaps.service.getDetails({ placeId: infowindowInfo.placeId }, function(place, status) {
 				if (status == google.maps.places.PlacesServiceStatus.OK) {
 
