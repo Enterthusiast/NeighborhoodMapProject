@@ -1,5 +1,20 @@
 var View = {
-	LayoutInfoWindow : function (place) {
+	Init : function() {
+		document.getElementsByClassName('topbar-menu-toggle')[0].addEventListener('click', function() {
+			var menuButton = document.getElementsByClassName('topbar-menu-toggle')[0];
+			var menuOpen = document.getElementsByClassName('menu-open')[0];
+			var menu = document.getElementsByClassName('menu')[0];
+			if(menuOpen) {
+				menuOpen.className = menuOpen.className.replace('menu-open','');
+				menuButton.innerHTML = "☰";
+			} else if (menu) {
+				menu.className = menu.className + ' menu-open';
+				menuButton.innerHTML = "✕";
+			}
+		});
+	},
+
+	LayoutInfoWindow : function(place) {
 		// Store the InforWindow layout
 		var layoutContent = "";
 

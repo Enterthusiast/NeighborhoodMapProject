@@ -18,6 +18,9 @@ var Controller = (function() {
 
 		// KO Init
 		ko.applyBindings(new ViewModel);
+
+		// View Init (add an event listener)
+		View.Init();
 	};
 
 	// Return the source list of markers
