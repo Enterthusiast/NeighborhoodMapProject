@@ -212,7 +212,17 @@ var ViewModel = function() {
 		}
 	};
 
+	this.CloseMenu = function() {
+		var menuOpen = document.getElementsByClassName('menu-open')[0];
+		if(menuOpen) {
+			menuOpen.className = menuOpen.className.replace('menu-open','');
+			self.icon("☰");
+		}
+	};
+
 	this.HighlightMarker = function(markerData) {
 		Controller.map.HighlightMarker(markerData);
+		// Close the menu on mobile to get a quick view of the selected place.
+		self.CloseMenu();
 	};
 };
