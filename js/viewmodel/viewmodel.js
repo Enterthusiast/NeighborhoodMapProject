@@ -18,9 +18,6 @@ var Controller = (function() {
 
 		// KO Init
 		ko.applyBindings(new ViewModel);
-
-		// View Init (add an event listener)
-		View.Init();
 	};
 
 	// Return the source list of markers
@@ -196,10 +193,33 @@ var ViewModel = function() {
 	// Using an observable for the filter input, so we cna change the results displayed in real time
 	this.filter = ko.observable("");
 
+	// Menu icon
+	this.icon = ko.observable("☰");
+
 	// Filter the places list
 	this.filteredMarkerArray = ko.computed(function() {
 		return Controller.map.FilterMarkers(self.filter().trim());
 	});
+
+	this.ToggleMenu = function() {
+		var menuOpen = document.getElementsByClassName('menu-open')[0];
+		var menu = document.getElementsByClassName('menu')[0];
+		if(menuOpen) {
+			menuOpen.className = menuOpen.className.replace('menu-open','');
+			self.icon("☰");
+		} else if (menu) {
+			menu.className = menu.className + ' menu-open';
+			self.icon("✕");
+		}
+	};
+
+	this.CloseMenu = function() {
+		var menuOpen = document.getElementsByClassName('menu-open')[0];
+		if(menuOpen) {
+			menuOpen.className = menuOpen.className.replace('menu-open','');
+			self.icon("☰");
+		}
+	};
 
 	this.HighlightMarker = function(markerData) {
 		Controller.map.HighlightMarker(markerData);
