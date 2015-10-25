@@ -8,31 +8,38 @@
     <link href="css/style.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-    <div class="flex-container">
+    <div class="flex-body">
       <div class="menu">
-        <div class="flex-row">
-          <div class="filter-div">
-            <div class="filter-input">
-              <input class="filter-text" data-bind="textInput: filter" placeholder="Type to filter the list">
-            </div>
+        <div class="filter-div">
+          <div class="filter-input">
+            <input class="filter-text" data-bind="textInput: filter" placeholder="Type to filter the list">
           </div>
-          <div class="filter-marker">
-            <h2 class= "result-title">Places I like in my Neighborhood</h2>
-            <div class="result-marker">
-              <ul data-bind="foreach: filteredMarkerArray">
-                <li>
-                  <span data-bind="text: title, click: $parent.HighlightMarker"></span><input class="result-check" checked="true" type="checkbox">
-                </li>
-              </ul>
-            </div>
+        </div>
+        <div class="filter-marker">
+          <div class="result-marker">
+            <ul data-bind="foreach: filteredMarkerArray">
+              <li class="result-li">
+                <div class="flex-result-li">
+                  <div class="result-text" data-bind="text: title, click: $parent.HighlightMarker"></div>
+                  <div class="result-check-div">
+                    <input class="result-check" checked="true" type="checkbox">
+                  </div>
+                </div>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
-      <div class="map">
-        <div class="flex-row">
-          <div class="mobile-topbar"></div>
-          <div id="map"></div>
+      <div class="map-panel">
+        <div class="topbar">
+          <div class="topbar-title-box">
+            <h2 class="topbar-title">Favorite places in my neighborhood</h2>
+          </div>
+          <div class="topbar-menu-toggle">
+            <div class="topbar-menu-toggle-icon">☰</div>
+          </div>
         </div>
+        <div id="map"></div>
       </div>
     </div>
 

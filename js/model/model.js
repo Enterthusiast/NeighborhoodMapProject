@@ -59,7 +59,7 @@ var Model = {
 			},
 			{
 				position: {lat: 48.84988, lng: 2.34851},
-				title: "Place du marché Maubert - Jeudi & Samedi"
+				title: "Marché Maubert - Jeudi & Samedi"
 			},
 			{
 				position: {lat: 48.84980, lng: 2.34856},
