@@ -19,8 +19,7 @@ var Controller = (function() {
 		// KO Init
 		ko.applyBindings(new ViewModel);
 		var data = ko.dataFor(document.body);
-		data.CreateMarkerObservableArray();
-		data.CreatefilteredMarkerArray();
+		setTimeout(data.CreateMarkerObservableArray, 3000)
 	};
 
 	// Return the source list of markers
@@ -61,32 +60,6 @@ var Controller = (function() {
 			});
 		},
 
-		// Animate a marker
-		HighlightMarker : function(markerData) {
-			// Stop any other animation
-			self.map.markers.forEach(function(marker) {
-				// We only stop ongoing animation and we won't stop the clicked marker animation (if any)
-				if(marker.animating === true && marker !== markerData) {
-					marker.setAnimation(null);
-				}
-				marker.setIcon(null);
-			});
-
-			// Animate the desired marker (only if not animating)
-			if(markerData.animation === false || !markerData.animation) {
-				markerData.setAnimation(google.maps.Animation.BOUNCE);
-				markerData.setIcon('https://mt.google.com/vt/icon?psize=34&font=fonts/Roboto-Regular.ttf&color=ff343434&name=icons/spotlight/spotlight-waypoint-a.png&ax=44&ay=48&scale=1&text=%E2%80%A2');
-
-				// Stop anymation after a short time
-				setTimeout(function() {
-						markerData.setAnimation(null);
-					}, 1400);
-			}
-
-			// Open the marker infowindow
-			self.map.OpenInfoWindow(markerData);
-		},
-
 		MarkerClicked : function(event) {
 			// Used to get infoWindows[index], to get the infowindow related to the marker
 			var index = 0;
@@ -94,7 +67,7 @@ var Controller = (function() {
 			self.map.markers.forEach(function(marker) {
 				// Looking for the clicked marker by its position (Latitude & Longitude)
 				if(marker.position === event.latLng) {
-					self.map.HighlightMarker(marker);
+					ko.dataFor(document.body).HighlightMarker(marker);
 				}
 				index = index + 1;
 			});
@@ -130,26 +103,6 @@ var Controller = (function() {
 			});
 		},
 
-		// Open an infowindow
-		OpenInfoWindow : function(markerData) {
-			// Close any other infowindow
-			self.map.infoWindows.forEach(function(infoWindow) {
-				infoWindow.close();
-			});
-
-			// Used to store the marker array index
-			var index = 0;
-
-			self.map.markers.forEach(function(marker) {
-				// Looking for the clicked marker by its position (Latitude & Longitude)
-				if(marker.position === markerData.position) {
-					// Open the desired infowindow on this Marker
-					self.map.infoWindows[index].open(Model.googlemaps.map, markerData);
-				}
-				index = index + 1;
-			});
-		},
-
 		// Store the markers
 		markers : [],
 
@@ -176,22 +129,19 @@ var ViewModel = function() {
 	// Create the filteredArray
 	this.filteredMarkerArray = ko.observableArray([]);
 
-	this.CreatefilteredMarkerArray = function() {
-		// if (!self.filteredMarkerArray()) {
-		// 	self.filteredMarkerArray = ko.computed(function() {
-		// 		return self.FilterMarkers(self.filter().trim());
-		// 	});
-		// }
-	};
-
 	this.CreateMarkerObservableArray = function() {
-		// We get the markers
-		var sourceMarkers = Controller.map.markers;
+		// We get the markers & infoWindows
+		var sourceMarkers = ko.observable(Controller.map.markers);
+		var sourceInfoWindows = ko.observable(Controller.map.infoWindows);
 
-		sourceMarkers.forEach(function(marker) {
+		var index = 0;
+		sourceMarkers().forEach(function(marker) {
 			var marker = ko.observable(marker);
+			var infoWindow = ko.observable(sourceInfoWindows()[index]);
+			console.log(sourceInfoWindows()[index]);
 			var checkbox = ko.observable(true);
-			self.MarkerArray.push({marker: marker, checkbox: checkbox});
+			self.MarkerArray.push({marker: marker, infoWindow: infoWindow, checkbox: checkbox});
+			index = index + 1;
 		});
 	};
 
@@ -220,13 +170,14 @@ var ViewModel = function() {
 			}
 		});
 
-		// Store previosu results size
+		// Store previous results size
 		var filteredArrayLength = self.filteredMarkerArray().length;
 		// Store the results in filteredMarkersArray
 		resultMarkerArray.forEach(function(data) {
 			var marker = ko.observable(data.marker());
+			var infoWindow = ko.observable(data.infoWindow());
 			var checkbox = ko.observable(data.checkbox());
-			self.filteredMarkerArray.push({marker: marker, checkbox: checkbox});
+			self.filteredMarkerArray.push({marker: marker, infoWindow: infoWindow, checkbox: checkbox});
 		});
 		// Remove previous results
 		self.filteredMarkerArray.splice(0, filteredArrayLength);
@@ -234,12 +185,45 @@ var ViewModel = function() {
 		return true;
 	};
 
-	// Call the highlight marker function with the right data
-	this.HighlightMarker = function(markerData) {
-		Controller.map.HighlightMarker(markerData);
+	// Open an infowindow
+	this.OpenInfoWindow = function(clickedData) {
+		// Close any other infowindow
+		self.MarkerArray().forEach(function(data) {
+			data.infoWindow().close();
+		});
+
+		// Open the chosen infoWindow
+		clickedData.infoWindow().open(Model.googlemaps.map, clickedData.marker());
+	},
+
+	// Animate a marker
+	this.HighlightMarker = function(clickedData) {
+		// Stop any other animation
+		self.MarkerArray().forEach(function(data) {
+			// We only stop ongoing animation and we won't stop the clicked marker animation (if any)
+			if(data.marker().animating === true && data.marker() !== markerData) {
+				data.marker().setAnimation(null);
+			}
+			data.marker().setIcon(null);
+		});
+
+		// Animate the desired marker (only if not animating)
+		if(clickedData.marker().animation === false || !clickedData.marker().animation) {
+			clickedData.marker().setAnimation(google.maps.Animation.BOUNCE);
+			clickedData.marker().setIcon('https://mt.google.com/vt/icon?psize=34&font=fonts/Roboto-Regular.ttf&color=ff343434&name=icons/spotlight/spotlight-waypoint-a.png&ax=44&ay=48&scale=1&text=%E2%80%A2');
+
+			// Stop anymation after a short time
+			setTimeout(function() {
+					clickedData.marker().setAnimation(null);
+				}, 1400);
+		}
+
+		// Open the marker infowindow
+		self.OpenInfoWindow(clickedData);
+
 		// Close the menu on mobile to get a quick view of the selected place.
 		self.CloseMenu();
-	};
+	},
 
 	// Open or close mobile menu
 	this.ToggleMenu = function() {
