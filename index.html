@@ -17,10 +17,10 @@
         </div>
         <div class="filter-marker">
           <div class="result-marker">
-            <ul data-bind="foreach: MarkerArray">
+            <ul data-bind="foreach: filteredMarkerArray">
               <li class="result-li">
                 <div class="flex-result-li">
-                  <div class="result-text" data-bind="text: checkbox, click: $parent.HighlightMarker"></div>
+                  <div class="result-text" data-bind="text: marker().title, click: $parent.HighlightMarker"></div>
                 </div>
               </li>
             </ul>

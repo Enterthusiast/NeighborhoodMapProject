@@ -20,6 +20,7 @@ var Controller = (function() {
 		ko.applyBindings(new ViewModel);
 		var data = ko.dataFor(document.body);
 		data.CreateMarkerObservableArray();
+		data.CreatefilteredMarkerArray();
 	};
 
 	// Return the source list of markers
@@ -58,34 +59,6 @@ var Controller = (function() {
 			markers.forEach(function(markerInfo) {
       			self.map.AddOneMarker(markerInfo);
 			});
-		},
-
-		FilterMarkers : function(filter) {
-			// Using a regular expression for a more permissive & flexible filter
-			var re = new RegExp(filter, "i");
-
-			// Store a filter Array to be send back to the ViewModel
-			var filteredMarkerArray = [];
-
-			// Looking for a match
-			self.map.markers.forEach(function(marker) {
-				if (re.test(marker.title)) {
-					// Display the marker on the map only if not already there (prevent blinking markers)
-					if(marker.map === null) {
-						marker.setMap(Model.googlemaps.map);
-					}
-					// Store the result for the ViewModel
-					filteredMarkerArray.push(marker);
-				}
-				else {
-					// Remove the marker on the map only if not already removed
-					if(marker.map !== null) {
-						marker.setMap(null);
-					}
-				}
-			});
-
-			return filteredMarkerArray;
 		},
 
 		// Animate a marker
@@ -200,21 +173,75 @@ var ViewModel = function() {
 	// Create the a ko.observableArray to store all the marker datas in an observable way
 	this.MarkerArray = ko.observableArray([]);
 
-	// Filter the places list
-	this.filteredMarkerArray = ko.computed(function() {
-		return Controller.map.FilterMarkers(self.filter().trim());
-	});
+	// Create the filteredArray
+	this.filteredMarkerArray = ko.observableArray([]);
+
+	this.CreatefilteredMarkerArray = function() {
+		// if (!self.filteredMarkerArray()) {
+		// 	self.filteredMarkerArray = ko.computed(function() {
+		// 		return self.FilterMarkers(self.filter().trim());
+		// 	});
+		// }
+	};
 
 	this.CreateMarkerObservableArray = function() {
 		// We get the markers
 		var sourceMarkers = Controller.map.markers;
 
 		sourceMarkers.forEach(function(marker) {
+			var marker = ko.observable(marker);
 			var checkbox = ko.observable(true);
 			self.MarkerArray.push({marker: marker, checkbox: checkbox});
 		});
 	};
 
+	this.FilterMarkers = function(filter) {
+		// Using a regular expression for a more permissive & flexible filter
+		var re = new RegExp(filter, "i");
+
+		// result Array
+		var resultMarkerArray = [];
+
+		// Looking for a match
+		self.MarkerArray().forEach(function(data) {
+			if (re.test(data.marker().title)) {
+				// Display the marker on the map only if not already there (prevent blinking markers)
+				if(data.marker().map === null) {
+					data.marker().setMap(Model.googlemaps.map);
+				}
+				// Store the result
+				resultMarkerArray.push(data);
+			}
+			else {
+				// Remove the marker on the map only if not already removed
+				if(data.marker().map !== null) {
+					data.marker().setMap(null);
+				}
+			}
+		});
+
+		// Store previosu results size
+		var filteredArrayLength = self.filteredMarkerArray().length;
+		// Store the results in filteredMarkersArray
+		resultMarkerArray.forEach(function(data) {
+			var marker = ko.observable(data.marker());
+			var checkbox = ko.observable(data.checkbox());
+			self.filteredMarkerArray.push({marker: marker, checkbox: checkbox});
+		});
+		// Remove previous results
+		self.filteredMarkerArray.splice(0, filteredArrayLength);
+
+		return true;
+	};
+
+	// Call the highlight marker function with the right data
+	this.HighlightMarker = function(markerData) {
+		Controller.map.HighlightMarker(markerData);
+		// Close the menu on mobile to get a quick view of the selected place.
+		self.CloseMenu();
+	};
+
+	// Open or close mobile menu
 	this.ToggleMenu = function() {
 		var menuOpen = document.getElementsByClassName('menu-open')[0];
 		var menu = document.getElementsByClassName('menu')[0];
@@ -227,6 +254,7 @@ var ViewModel = function() {
 		}
 	};
 
+	// Close the mobile menu
 	this.CloseMenu = function() {
 		var menuOpen = document.getElementsByClassName('menu-open')[0];
 		if(menuOpen) {
@@ -235,9 +263,9 @@ var ViewModel = function() {
 		}
 	};
 
-	this.HighlightMarker = function(markerData) {
-		Controller.map.HighlightMarker(markerData);
-		// Close the menu on mobile to get a quick view of the selected place.
-		self.CloseMenu();
-	};
+	// Filter the places list when the filter change
+	this.triggerFilter = ko.computed(function() {
+				return self.FilterMarkers(self.filter().trim());
+			});
+
 };
