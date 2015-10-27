@@ -18,6 +18,8 @@ var Controller = (function() {
 
 		// KO Init
 		ko.applyBindings(new ViewModel);
+		var data = ko.dataFor(document.body);
+		data.CreateMarkerObservableArray();
 	};
 
 	// Return the source list of markers
@@ -195,10 +197,23 @@ var ViewModel = function() {
 	// Menu icon
 	this.icon = ko.observable("☰");
 
+	// Create the a ko.observableArray to store all the marker datas in an observable way
+	this.MarkerArray = ko.observableArray([]);
+
 	// Filter the places list
 	this.filteredMarkerArray = ko.computed(function() {
 		return Controller.map.FilterMarkers(self.filter().trim());
 	});
+
+	this.CreateMarkerObservableArray = function() {
+		// We get the markers
+		var sourceMarkers = Controller.map.markers;
+
+		sourceMarkers.forEach(function(marker) {
+			var checkbox = ko.observable(true);
+			self.MarkerArray.push({marker: marker, checkbox: checkbox});
+		});
+	};
 
 	this.ToggleMenu = function() {
 		var menuOpen = document.getElementsByClassName('menu-open')[0];
