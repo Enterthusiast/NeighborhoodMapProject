@@ -1,118 +1,3 @@
-// My Controller (KO ViewModel cannot be use as a standard controller, it can only be used for KO stuff)
-var Controller = (function() {
-	var self = this;
-
-	// Create the map, show every markers, start Knockout
-	this.Init = function() {
-		// Initialize the map
-		Model.googlemaps.map = new google.maps.Map(document.getElementById('map'), {
-			center: {lat: 48.846, lng: 2.337},
-			zoom: 15
-		});
-
-		// Initialize the places service
-		Model.googlemaps.service = new google.maps.places.PlacesService(Model.googlemaps.map);
-
-		self.map.AddAllMarkers(GetMarkersInfo());
-		self.map.AddAllWindows(GetWindowsInfo());
-
-		// KO Init
-		ko.applyBindings(new ViewModel);
-		var data = ko.dataFor(document.body);
-		setTimeout(data.CreateMarkerObservableArray, 3000)
-	};
-
-	// Return the source list of markers
-	this.GetMarkersInfo = function() {
-		return Model.googlemaps.markers;
-	};
-
-	// Return the source list of infowindows
-	this.GetWindowsInfo = function() {
-		return Model.googlemaps.infowindows;
-	};
-
-	this.map = {
-		// Add One Marker to the map
-		AddOneMarker : function(markerInfo) {
-			// TODO: add marker icons based on type of shop ?
-			var marker = new google.maps.Marker({
-			    position : markerInfo.position,
-			    title : markerInfo.title,
-			    animation: google.maps.Animation.DROP
-			});
-
-			// Set the marker on the map
-			marker.setMap(Model.googlemaps.map);
-
-			// Add a bhavior on click
-			marker.addListener('click', self.map.MarkerClicked);
-
-			// Store the marker
-			self.map.markers.push(marker);
-		},
-
-		// Add all marker to the map
-		AddAllMarkers : function(markers) {
-			var delayMultiplier = 0;
-			markers.forEach(function(markerInfo) {
-      			self.map.AddOneMarker(markerInfo);
-			});
-		},
-
-		MarkerClicked : function(event) {
-			// Used to get infoWindows[index], to get the infowindow related to the marker
-			var index = 0;
-
-			self.map.markers.forEach(function(marker) {
-				// Looking for the clicked marker by its position (Latitude & Longitude)
-				if(marker.position === event.latLng) {
-					ko.dataFor(document.body).HighlightMarker(marker);
-				}
-				index = index + 1;
-			});
-		},
-
-		AddOneInfoWindow : function(infowindowInfo, arrayIndex) {
-			// TODO: Add Yelp info ?
-			Model.googlemaps.service.getDetails({ placeId: infowindowInfo.placeId }, function(place, status) {
-				if (status == google.maps.places.PlacesServiceStatus.OK) {
-
-					var validContent = View.LayoutInfoWindow(place);
-
-					var infowindow = new google.maps.InfoWindow({
-						content: validContent
-  					});
-
-  					// Store the infowindow
-					self.map.infoWindows[arrayIndex] = infowindow;
-				} else {
-					console.log(status);
-				}
-			});
-		},
-
-		// Add all infowindow
-		AddAllWindows : function(infowindows) {
-			// Memorize position in array
-			var index = 0;
-
-			infowindows.forEach(function(infowindowInfo) {
-				self.map.AddOneInfoWindow(infowindowInfo, index);
-				index = index +1;
-			});
-		},
-
-		// Store the markers
-		markers : [],
-
-		// Store the infoWindows
-		infoWindows : []
-	};
-
-	return this;
-})();
-
 // Knockout ViewModel
 var ViewModel = function() {
 	var self = this;
@@ -129,16 +14,110 @@ var ViewModel = function() {
 	// Create the filteredArray
 	this.filteredMarkerArray = ko.observableArray([]);
 
-	this.CreateMarkerObservableArray = function() {
-		// We get the markers & infoWindows
-		var sourceMarkers = ko.observable(Controller.map.markers);
-		var sourceInfoWindows = ko.observable(Controller.map.infoWindows);
+	// Data import from model
+	this.markers = [];
+	this.infoWindows = [];
 
+	this.Init = function() {
+		// Initialize the map
+		Model.googlemaps.map = new google.maps.Map(document.getElementById('map'), {
+			center: {lat: 48.846, lng: 2.337},
+			zoom: 15
+		});
+
+		// Initialize the places service
+		Model.googlemaps.service = new google.maps.places.PlacesService(Model.googlemaps.map);
+
+		// Get data from Model and compute it
+		self.AddAllMarkers(self.GetMarkersInfo());
+		self.AddAllWindows(self.GetWindowsInfo());
+
+		// Store it in observable variables
+		setTimeout(self.CreateMarkerObservableArray, 1000);
+	};
+
+	// Return the source list of markers from Model
+	this.GetMarkersInfo = function() {
+		return Model.googlemaps.markers;
+	};
+
+	// Return the source list of infowindows from Model
+	this.GetWindowsInfo = function() {
+		return Model.googlemaps.infowindows;
+	};
+
+	// Add One Marker to the map
+	this.AddOneMarker = function(markerInfo) {
+		// TODO: add marker icons based on type of shop ?
+		var marker = new google.maps.Marker({
+		    position : markerInfo.position,
+		    title : markerInfo.title,
+		    animation: google.maps.Animation.DROP
+		});
+
+		// Set the marker on the map
+		marker.setMap(Model.googlemaps.map);
+
+		// Add a bhavior on click
+		marker.addListener('click', self.MarkerClicked);
+
+		// Store the marker
+		self.markers.push(marker);
+	};
+
+	// Add all marker to the map
+	this.AddAllMarkers = function(markers) {
+		var delayMultiplier = 0;
+		markers.forEach(function(markerInfo) {
+  			self.AddOneMarker(markerInfo);
+		});
+	};
+
+	// Add one infowindow
+	this.AddOneInfoWindow = function(infowindowInfo, arrayIndex) {
+		// TODO: Add Yelp info ?
+		Model.googlemaps.service.getDetails({ placeId: infowindowInfo.placeId }, function(place, status) {
+			if (status == google.maps.places.PlacesServiceStatus.OK) {
+
+				var validContent = View.LayoutInfoWindow(place);
+
+				var infowindow = new google.maps.InfoWindow({
+					content: validContent
+					});
+
+				// Store the infowindow
+				self.infoWindows[arrayIndex] = infowindow;
+			} else {
+				console.log(status);
+			}
+		});
+	};
+
+	// Add all infowindow
+	this.AddAllWindows = function(infowindows) {
+		// Memorize position in array
 		var index = 0;
-		sourceMarkers().forEach(function(marker) {
+
+		infowindows.forEach(function(infowindowInfo) {
+			self.AddOneInfoWindow(infowindowInfo, index);
+			index = index +1;
+		});
+	};
+
+	this.MarkerClicked = function(event) {
+		self.MarkerArray().forEach(function(data) {
+			// Looking for the clicked marker by its position (Latitude & Longitude)
+			if(data.marker().position === event.latLng) {
+				self.HighlightMarker(data);
+			}
+		});
+	};
+
+	this.CreateMarkerObservableArray = function() {
+		var index = 0;
+		self.markers.forEach(function(marker) {
 			var marker = ko.observable(marker);
-			var infoWindow = ko.observable(sourceInfoWindows()[index]);
-			console.log(sourceInfoWindows()[index]);
+			var infoWindow = ko.observable(self.infoWindows[index]);
 			var checkbox = ko.observable(true);
 			self.MarkerArray.push({marker: marker, infoWindow: infoWindow, checkbox: checkbox});
 			index = index + 1;
@@ -146,6 +125,9 @@ var ViewModel = function() {
 	};
 
 	this.FilterMarkers = function(filter) {
+		// Close all infoWindow
+		self.CloseAllInfoWindow();
+
 		// Using a regular expression for a more permissive & flexible filter
 		var re = new RegExp(filter, "i");
 
@@ -187,21 +169,26 @@ var ViewModel = function() {
 
 	// Open an infowindow
 	this.OpenInfoWindow = function(clickedData) {
-		// Close any other infowindow
-		self.MarkerArray().forEach(function(data) {
-			data.infoWindow().close();
-		});
-
+		// Close all infoWindow
+		self.CloseAllInfoWindow();
 		// Open the chosen infoWindow
 		clickedData.infoWindow().open(Model.googlemaps.map, clickedData.marker());
 	},
+
+	// Close all infoWindow
+	this.CloseAllInfoWindow = function(clickedData) {
+		// Close all infowindow stored in MarkerArray
+		self.MarkerArray().forEach(function(data) {
+			data.infoWindow().close();
+		});
+	};
 
 	// Animate a marker
 	this.HighlightMarker = function(clickedData) {
 		// Stop any other animation
 		self.MarkerArray().forEach(function(data) {
 			// We only stop ongoing animation and we won't stop the clicked marker animation (if any)
-			if(data.marker().animating === true && data.marker() !== markerData) {
+			if(data.marker().animating === true && data.marker() !== clickedData.marker()) {
 				data.marker().setAnimation(null);
 			}
 			data.marker().setIcon(null);
@@ -252,4 +239,12 @@ var ViewModel = function() {
 				return self.FilterMarkers(self.filter().trim());
 			});
 
+};
+
+// Create the map, start Knockout
+var AppInit = function() {
+	// KO Init
+	ko.applyBindings(new ViewModel);
+	var data = ko.dataFor(document.body);
+	data.Init();
 };
