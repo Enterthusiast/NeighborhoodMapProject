@@ -20,7 +20,8 @@
             <ul data-bind="foreach: filteredMarkerArray">
               <li class="result-li">
                 <div class="flex-result-li">
-                  <div class="result-text" data-bind="text: title, click: $parent.HighlightMarker"></div>
+                  <div class="result-text" data-bind="text: marker().title, click: $parent.HighlightMarker"></div>
+                  <input type="checkbox" class="result-checkbox" data-bind="checked: checkbox"/>
                 </div>
               </li>
             </ul>
@@ -46,7 +47,7 @@
     <script src="js/viewmodel/viewmodel.js"></script>
 
     <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9V681P6SnJXI-5glxGhYipuRb9QiDtHM&libraries=places&callback=Controller.Init"></script>
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9V681P6SnJXI-5glxGhYipuRb9QiDtHM&libraries=places&callback=AppInit"></script>
     </script>
 </body>
 </html>
