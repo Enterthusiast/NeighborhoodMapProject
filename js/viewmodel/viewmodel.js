@@ -118,7 +118,7 @@ var ViewModel = function() {
 		self.markers.forEach(function(marker) {
 			var marker = ko.observable(marker);
 			var infoWindow = ko.observable(self.infoWindows[index]);
-			var checkbox = ko.observable(true);
+			var checkbox = ko.observable(false);
 			self.MarkerArray.push({marker: marker, infoWindow: infoWindow, checkbox: checkbox});
 			index = index + 1;
 		});
@@ -134,19 +134,38 @@ var ViewModel = function() {
 		// result Array
 		var resultMarkerArray = [];
 
-		// Looking for a match
+
+		// Looking for "Pinned" location in the filteredMarkerArray
+		self.filteredMarkerArray().forEach(function(data) {
+			if (data.checkbox()) {
+				// Store the "Pinned" location as a valid result
+				resultMarkerArray.push(data);
+			}
+		});
+
+		// Looking for a match with the filter
 		self.MarkerArray().forEach(function(data) {
+			// Check if this Marker Array data is "Pinned" (already stored just above)
+			var isPinned = false;
+			resultMarkerArray.forEach(function(testData) {
+				if(testData.marker().title === data.marker().title) {
+					// Data found, let's bypass the filter
+					isPinned = true;
+				}
+			});
+
 			if (re.test(data.marker().title)) {
 				// Display the marker on the map only if not already there (prevent blinking markers)
 				if(data.marker().map === null) {
 					data.marker().setMap(Model.googlemaps.map);
 				}
-				// Store the result
-				resultMarkerArray.push(data);
+				if (!isPinned) {
+					resultMarkerArray.push(data);
+				}
 			}
 			else {
-				// Remove the marker on the map only if not already removed
-				if(data.marker().map !== null) {
+				// Remove the marker on the map only if not already removed (or Pinned)
+				if(!isPinned && data.marker().map !== null) {
 					data.marker().setMap(null);
 				}
 			}
@@ -154,13 +173,16 @@ var ViewModel = function() {
 
 		// Store previous results size
 		var filteredArrayLength = self.filteredMarkerArray().length;
+
 		// Store the results in filteredMarkersArray
 		resultMarkerArray.forEach(function(data) {
 			var marker = ko.observable(data.marker());
 			var infoWindow = ko.observable(data.infoWindow());
 			var checkbox = ko.observable(data.checkbox());
-			self.filteredMarkerArray.push({marker: marker, infoWindow: infoWindow, checkbox: checkbox});
+			var newData = {marker: marker, infoWindow: infoWindow, checkbox: checkbox};
+			self.filteredMarkerArray.push(newData);
 		});
+
 		// Remove previous results
 		self.filteredMarkerArray.splice(0, filteredArrayLength);
 
@@ -173,7 +195,7 @@ var ViewModel = function() {
 		self.CloseAllInfoWindow();
 		// Open the chosen infoWindow
 		clickedData.infoWindow().open(Model.googlemaps.map, clickedData.marker());
-	},
+	};
 
 	// Close all infoWindow
 	this.CloseAllInfoWindow = function(clickedData) {
