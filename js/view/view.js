@@ -1,9 +1,9 @@
 var View = {
 	LayoutInfoWindow : function(place) {
 		// Store the InforWindow layout
-		var layoutContent = "";
+		var layoutContent = '';
 
-		// Check that every required field as data, then build an HTML code aroudn it
+		// Check that every required field as data, then build an HTML code around it
 		if (place.geometry.location.lat() && place.geometry.location.lng()) {
 			layoutContent = layoutContent + '<div class="infwin-img"><img src="https://maps.googleapis.com/maps/api/streetview?size=200x200&location=' + place.geometry.location.lat() + ',' + place.geometry.location.lng() + '&key=AIzaSyC9V681P6SnJXI-5glxGhYipuRb9QiDtHM"/></div></br>';
 		}
@@ -20,7 +20,21 @@ var View = {
 			layoutContent = layoutContent + '<span class="infwin-rating">Rating: ' + place.rating + '/5</span></br>';
 		}
 		if (place.website) {
-			layoutContent = layoutContent + '<a class="infwin-website" href="' + place.website + '">Website</a>';
+			layoutContent = layoutContent + '<a class="infwin-website" href="' + place.website + '">Website</a></br>';
+		}
+		return layoutContent;
+	},
+
+	LayoutInfoWindowYelp : function(place) {
+		// Store the InforWindow layout (with mandatory Yelp logo)
+		var layoutContent = '';
+
+		// Check that every required field as data, then build an HTML code around it
+		if (place.url) {
+			layoutContent = layoutContent + '<a class="infwin-website" href="' + place.url + '"><img src="https://s3-media2.fl.yelpcdn.com/assets/srv0/developer_pages/14f29ad24935/assets/img/yelp_logo_40x20.png"/></a>';
+		}
+		if (place.rating && place.rating_img_url_small) {
+			layoutContent = layoutContent + '<span class="infwin-yelp-rating"><img src="' + place.rating_img_url_small + '"/> ' + place.rating + '/5</span></br>';
 		}
 		return layoutContent;
 	}

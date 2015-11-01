@@ -1,3 +1,10 @@
+// TODO: Yelp API
+// TODO: Manage Pottential Error (like no data, no google, etc.)
+// TODO: localStorage
+// TODO: Better Comment
+// TODO: Grunt minify
+// TODO: Loading?
+
 // Knockout ViewModel
 var ViewModel = function() {
 	var self = this;
@@ -33,7 +40,7 @@ var ViewModel = function() {
 		self.AddAllWindows(self.GetWindowsInfo());
 
 		// Store it in observable variables
-		setTimeout(self.CreateMarkerObservableArray, 1000);
+		setTimeout(self.CreateMarkerObservableArray, 3000);
 	};
 
 	// Return the source list of markers from Model
@@ -65,6 +72,79 @@ var ViewModel = function() {
 		self.markers.push(marker);
 	};
 
+	// Yelp toolbox
+	// Yelp Callback
+	this.YelpCallback = function(data) {
+		//Useless phantom function required for the API to work
+	};
+	// Yelp request counter (used prevent too many requests at the same time)
+	this.yelpCalled = 0;
+	// Yelp arrayIndex to store what can not be sent via parameters
+	this.yelpArrayIndex = 0;
+	// Yelp request builder
+	this.YelpRequest = function(yelpPlaceId, arrayIndex) {
+		// Building the Auth Message
+		var auth = {
+			//
+			// Update with your auth tokens.
+			//
+			consumerKey : "DX5Z4PU6s7UB_9XFqxJCJQ",
+			consumerSecret : "-aWkSkpIwe98jMqm0AzYxqHK75Y",
+			accessToken : "YYM4HrPNz87jzDvqLYLtkejCiEhc-Vx2",
+			// This example is a proof of concept, for how to use the Yelp v2 API with javascript.
+			// You wouldn't actually want to expose your access token secret like this in a real application.
+			accessTokenSecret : "B9VeVifctkamXHVW6idiOD_RCQM",
+			serviceProvider : {
+				signatureMethod : "HMAC-SHA1"
+			}
+		};
+
+		var accessor = {
+			consumerSecret : auth.consumerSecret,
+			tokenSecret : auth.accessTokenSecret
+		};
+
+		// Store the callback function (prevent error in the URL)
+		var yelpCallback = self.YelpCallback;
+		// Store the index for the ajax success function
+		self.yelpArrayIndex = arrayIndex;
+
+		parameters = [];
+		parameters.push(['callback', 'yelpCallback']);
+		parameters.push(['oauth_consumer_key', auth.consumerKey]);
+		parameters.push(['oauth_consumer_secret', auth.consumerSecret]);
+		parameters.push(['oauth_token', auth.accessToken]);
+		parameters.push(['oauth_signature_method', 'HMAC-SHA1']);
+
+		var message = {
+			'action' : 'http://api.yelp.com/v2/business/' + yelpPlaceId,
+			'method' : 'GET',
+			'parameters' : parameters
+		};
+
+		OAuth.setTimestampAndNonce(message);
+		OAuth.SignatureMethod.sign(message, accessor);
+
+		var parameterMap = OAuth.getParameterMap(message.parameters);
+		parameterMap.oauth_signature = OAuth.percentEncode(parameterMap.oauth_signature)
+
+		// Making the call!
+		$.ajax({
+			'url' : message.action,
+			'data' : parameterMap,
+			'cache' : true,
+			'dataType' : 'jsonp',
+			'jsonpCallback' : 'yelpCallback',
+			'success' : function(data, textStats, XMLHttpRequest) {
+				// This is where we add the Yelp data to the infoWindows array
+				console.log(data);
+				var validContent = View.LayoutInfoWindowYelp(data);
+				self.infoWindows[self.yelpArrayIndex].content = self.infoWindows[self.yelpArrayIndex].content + validContent;
+			}
+		});
+
+	};
+
 	// Add all marker to the map
 	this.AddAllMarkers = function(markers) {
 		var delayMultiplier = 0;
@@ -76,7 +156,9 @@ var ViewModel = function() {
 	// Add one infowindow
 	this.AddOneInfoWindow = function(infowindowInfo, arrayIndex) {
 		// TODO: Add Yelp info ?
-		Model.googlemaps.service.getDetails({ placeId: infowindowInfo.placeId }, function(place, status) {
+
+		// Asking Google Place API & Google Street View (in the View) for information
+		Model.googlemaps.service.getDetails({ placeId: infowindowInfo.googlePlaceId }, function(place, status) {
 			if (status == google.maps.places.PlacesServiceStatus.OK) {
 
 				var validContent = View.LayoutInfoWindow(place);
@@ -85,8 +167,14 @@ var ViewModel = function() {
 					content: validContent
 					});
 
-				// Store the infowindow
+				// Store the infowindow in the right order
 				self.infoWindows[arrayIndex] = infowindow;
+
+				// Call the additional Yelp API (With a timeout to prevent being blocked as spam)
+				setTimeout(function(){
+					self.YelpRequest(infowindowInfo.yelpPlaceId, arrayIndex);
+					}, self.yelpCalled * 250, arrayIndex);
+				self.yelpCalled = self.yelpCalled + 1;
 			} else {
 				console.log(status);
 			}
