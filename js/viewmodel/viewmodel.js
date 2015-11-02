@@ -22,8 +22,8 @@ var ViewModel = function() {
 	this.filteredMarkerArray = ko.observableArray([]);
 
 	// Data import from model
-	this.markers = [];
-	this.infoWindows = [];
+	this.markers = ko.observableArray([]);
+	this.infoWindows = ko.observableArray([]);
 
 	this.Init = function() {
 		// Initialize the map
@@ -35,12 +35,27 @@ var ViewModel = function() {
 		// Initialize the places service
 		Model.googlemaps.service = new google.maps.places.PlacesService(Model.googlemaps.map);
 
+		// Subscribe to the markers and infoWindows array
+		// This way we can check that information has been correctly retrieved from APIs
+		self.markers.subscribe(function(data) {
+			console.log("Subscribed Markers" + data);
+		});
+		self.infoWindows.subscribe(function(data) {
+			console.log("Subscribed InfoWindows" + data);
+		});
+		self.infoWindows.extend({ notify: 'always' });
+
 		// Get data from Model and compute it
 		self.AddAllMarkers(self.GetMarkersInfo());
 		self.AddAllWindows(self.GetWindowsInfo());
 
 		// Store it in observable variables
 		setTimeout(self.CreateMarkerObservableArray, 3000);
+	};
+
+	// Test data retrieved from API
+	this.APICallCheck = function() {
+		console.lof("TODO");
 	};
 
 	// Return the source list of markers from Model
@@ -139,7 +154,7 @@ var ViewModel = function() {
 				// This is where we add the Yelp data to the infoWindows array
 				console.log(data);
 				var validContent = View.LayoutInfoWindowYelp(data);
-				self.infoWindows[self.yelpArrayIndex].content = self.infoWindows[self.yelpArrayIndex].content + validContent;
+				self.infoWindows()[self.yelpArrayIndex].content = self.infoWindows()[self.yelpArrayIndex].content + validContent;
 			}
 		});
 
@@ -168,13 +183,14 @@ var ViewModel = function() {
 					});
 
 				// Store the infowindow in the right order
-				self.infoWindows[arrayIndex] = infowindow;
+				self.infoWindows().splice(arrayIndex,1,infowindow);
 
 				// Call the additional Yelp API (With a timeout to prevent being blocked as spam)
 				setTimeout(function(){
 					self.YelpRequest(infowindowInfo.yelpPlaceId, arrayIndex);
 					}, self.yelpCalled * 250, arrayIndex);
 				self.yelpCalled = self.yelpCalled + 1;
+
 			} else {
 				console.log(status);
 			}
@@ -186,7 +202,13 @@ var ViewModel = function() {
 		// Memorize position in array
 		var index = 0;
 
+		// "Allocate" the self.infoWindows array
 		infowindows.forEach(function(infowindowInfo) {
+			self.infoWindows.push({});
+		});
+
+		infowindows.forEach(function(infowindowInfo) {
+			// Create and store the infowindow data in self.infoWindows
 			self.AddOneInfoWindow(infowindowInfo, index);
 			index = index +1;
 		});
@@ -203,9 +225,9 @@ var ViewModel = function() {
 
 	this.CreateMarkerObservableArray = function() {
 		var index = 0;
-		self.markers.forEach(function(marker) {
+		self.markers().forEach(function(marker) {
 			var marker = ko.observable(marker);
-			var infoWindow = ko.observable(self.infoWindows[index]);
+			var infoWindow = ko.observable(self.infoWindows()[index]);
 			var checkbox = ko.observable(false);
 			self.MarkerArray.push({marker: marker, infoWindow: infoWindow, checkbox: checkbox});
 			index = index + 1;
