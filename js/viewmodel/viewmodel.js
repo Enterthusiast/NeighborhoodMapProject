@@ -107,13 +107,10 @@ var ViewModel = function() {
 	this.ajaxCallIndex = 0;
 	// Call the Yelp Ajax  request one by one
 	this.ajaxCalling = function(index) {
-		console.log('ajaxCalling', index, self.ajaxCall[index]);
 		if (self.ajaxCall[index]) {
 			self.ajaxCall[index]();
-			console.log('ajaxCalling Executed');
 		} else if(index === self.ajaxCall.length) {
 			// When all calls has been done we store the data in the Marker Array, starting the app in the same process
-			console.log('Let\'s get the party started');
 			self.CreateMarkerObservableArray();
 		}
 	};
@@ -174,7 +171,6 @@ var ViewModel = function() {
 						//'jsonpCallback' : 'yelpCallback',
 						'callback' : 'yelpCallback',
 						'success' : function(data, textStats, XMLHttpRequest) {
-							console.log('Success ', arrayIndex, yelpPlaceId, messageAction, data);
 							// This is where we add the Yelp data to the infoWindows array
 							// Get the formated data
 							var validContent = View.LayoutInfoWindowYelp(data);
@@ -200,7 +196,6 @@ var ViewModel = function() {
 						},
 						'complete' : function(xOptions, textStats) {
 							// Call the next Ajax request
-							console.log('Complete', textStats);
 							self.ajaxCallIndex = self.ajaxCallIndex + 1;
 							self.ajaxCalling(self.ajaxCallIndex);
 						},
@@ -209,7 +204,6 @@ var ViewModel = function() {
 			})(message.action, parameterMap, arrayIndex, yelpPlaceId)
 		);
 
-		console.log ('length', self.ajaxCall.length, self.infoWindows().length);
 		if (self.ajaxCall.length === self.infoWindows().length) {
 			self.ajaxCalling(self.ajaxCallIndex);
 		}
@@ -245,13 +239,12 @@ var ViewModel = function() {
 
 				// Call the additional Yelp API (With a timeout to prevent being blocked as spam)
 				var yelpPlaceId = infowindowInfo.yelpPlaceId;
-				//console.log('AddOneG ' + arrayIndex + ' ', infowindow.content);
-				setTimeout((function(index){
+				var yelpFunction = (function(index){
 					return function() {
-						//console.log('AddOneY ' + index + ' ' + yelpPlaceId);
 						self.YelpRequest(yelpPlaceId, index);
 					};
-				})(arrayIndex));
+				})(arrayIndex);
+				yelpFunction();
 
 			} else {
 				// Create an empty infowindow
@@ -263,13 +256,14 @@ var ViewModel = function() {
 				// Store the infowindow in the right order & in a way that trigger Knockout Observable
 				self.infoWindows.splice(arrayIndex, 1, infowindow);
 
-				// Call the additional Yelp API anyway (With a timeout to prevent being blocked as spam)
-				setTimeout((function(index){
+				// Call the additional Yelp API (With a timeout to prevent being blocked as spam)
+				var yelpPlaceId = infowindowInfo.yelpPlaceId;
+				var yelpFunction = (function(index){
 					return function() {
-						//console.log('AddOneY ' + index + ' ' + yelpPlaceId);
 						self.YelpRequest(yelpPlaceId, index);
 					};
-				})(arrayIndex));
+				})(arrayIndex);
+				yelpFunction();
 			}
 		});
 	};
