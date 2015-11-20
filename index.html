@@ -8,6 +8,7 @@
     <link href="css/style.css" rel="stylesheet" type="text/css">
 </head>
 <body>
+
     <div class="flex-body">
       <div class="menu">
         <div class="filter-div">
@@ -41,13 +42,24 @@
       </div>
     </div>
 
+    <!-- load libraries -->
     <script src="js/lib/knockout-3.3.0.js"></script>
+    <script src="js/lib/jquery-1.11.3.min.js"></script>
+    <script src="js/lib/jquery.jsonp-2.4.0.min.js"></script>
+    <!-- oauth -->
+    <script src="http://oauth.googlecode.com/svn/code/javascript/oauth.js"></script>
+    <!-- sha1 -->
+    <script src="http://oauth.googlecode.com/svn/code/javascript/sha1.js"></script>
+
+    <!-- load code -->
     <script src="js/model/model.js"></script>
     <script src="js/view/view.js"></script>
     <script src="js/viewmodel/viewmodel.js"></script>
 
+    <!-- call google map -->
     <script async defer
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9V681P6SnJXI-5glxGhYipuRb9QiDtHM&libraries=places&callback=AppInit"></script>
     </script>
+
 </body>
 </html>

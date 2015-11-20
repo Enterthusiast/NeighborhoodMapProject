@@ -1,3 +1,14 @@
+// TODO: Manage Pottential Error & Loading (like no data, no google, etc.)
+// TODO: localStorage
+// TODO: Better Comment
+// TODO: Grunt minify
+
+// Yelp Callback
+var yelpCallback = function(data) {
+	console.log(data);
+	return true;
+};
+
 // Knockout ViewModel
 var ViewModel = function() {
 	var self = this;
@@ -15,8 +26,8 @@ var ViewModel = function() {
 	this.filteredMarkerArray = ko.observableArray([]);
 
 	// Data import from model
-	this.markers = [];
-	this.infoWindows = [];
+	this.markers = ko.observableArray([]);
+	this.infoWindows = ko.observableArray([]);
 
 	this.Init = function() {
 		// Initialize the map
@@ -28,12 +39,31 @@ var ViewModel = function() {
 		// Initialize the places service
 		Model.googlemaps.service = new google.maps.places.PlacesService(Model.googlemaps.map);
 
+		// Subscribe to the markers and infoWindows array
+		// This way we can check that information has been correctly retrieved from APIs
+		self.markers.subscribe(function(data) {
+			self.APICallCheck(data, 'markers');
+		});
+		self.infoWindows.subscribe(function(data) {
+			self.APICallCheck(data, 'infoWindows');
+		});
+
+
 		// Get data from Model and compute it
 		self.AddAllMarkers(self.GetMarkersInfo());
 		self.AddAllWindows(self.GetWindowsInfo());
 
 		// Store it in observable variables
-		setTimeout(self.CreateMarkerObservableArray, 1000);
+		//setTimeout(self.CreateMarkerObservableArray, 5000);
+	};
+
+	// Test data retrieved from API
+	this.APICallCheck = function(data, type) {
+		// console.log('Subscribed' + type);
+		// console.log(data);
+		// if(data[0] && data[0].API && data[0].API.googlePlaces && data[0].API.yelp) {
+		// 	console.log(data[0].API.googlePlaces + ' ' + data[0].API.yelp);
+		// }
 	};
 
 	// Return the source list of markers from Model
@@ -65,6 +95,100 @@ var ViewModel = function() {
 		self.markers.push(marker);
 	};
 
+	// Yelp ajax request counter
+	this.ajaxCallIndex = 0;
+
+	// Yelp request builder
+	this.YelpRequest = function(yelpPlaceId, arrayIndex) {
+		// Building the Auth Message
+		var auth = {
+			//
+			// Update with your auth tokens.
+			//
+			consumerKey : "DX5Z4PU6s7UB_9XFqxJCJQ",
+			consumerSecret : "-aWkSkpIwe98jMqm0AzYxqHK75Y",
+			accessToken : "YYM4HrPNz87jzDvqLYLtkejCiEhc-Vx2",
+			// This example is a proof of concept, for how to use the Yelp v2 API with javascript.
+			// You wouldn't actually want to expose your access token secret like this in a real application.
+			accessTokenSecret : "B9VeVifctkamXHVW6idiOD_RCQM",
+			serviceProvider : {
+				signatureMethod : "HMAC-SHA1"
+			}
+		};
+
+		var accessor = {
+			consumerSecret : auth.consumerSecret,
+			tokenSecret : auth.accessTokenSecret
+		};
+
+		parameters = [];
+		parameters.push(['callback', 'yelpCallback']);
+		parameters.push(['oauth_consumer_key', auth.consumerKey]);
+		parameters.push(['oauth_consumer_secret', auth.consumerSecret]);
+		parameters.push(['oauth_token', auth.accessToken]);
+		parameters.push(['oauth_signature_method', 'HMAC-SHA1']);
+
+		var message = {
+			'action' : 'http://api.yelp.com/v2/business/' + yelpPlaceId,
+			'method' : 'GET',
+			'parameters' : parameters
+		};
+
+		OAuth.setTimestampAndNonce(message);
+		OAuth.SignatureMethod.sign(message, accessor);
+
+		var parameterMap = OAuth.getParameterMap(message.parameters);
+		parameterMap.oauth_signature = OAuth.percentEncode(parameterMap.oauth_signature);
+
+		// Making the call!
+		$.jsonp({
+			'url' : message.action,
+			'data' : parameterMap,
+			'cache' : true,
+			'dataType' : 'jsonp',
+			'callback' : 'yelpCallback',
+			'success' : function(data, textStats, XMLHttpRequest) {
+				// This is where we add the Yelp data to the infoWindows array
+				// Get the formated data
+				var validContent = View.LayoutInfoWindowYelp(data);
+				// Store and modify the data
+				var updatedInfoWindow = self.infoWindows()[arrayIndex];
+				updatedInfoWindow.content = updatedInfoWindow.content + validContent;
+				// Add a variable to store the status of the Yelp API request
+				updatedInfoWindow.API.yelp = 'success';
+				// Add the data in a way that trigger Knockout Observable
+				self.infoWindows.splice(arrayIndex, 1, updatedInfoWindow);
+
+				console.log(updatedInfoWindow);
+			},
+			'error' : function(XMLHttpRequest, textStats, errorThrown) {
+
+				console.log(textStats);
+
+				// This is where we add the Yelp data to the infoWindows array
+				// var updatedInfoWindow = self.infoWindows()[arrayIndex];
+				// Add a variable to store the status of the Yelp API request
+				// updatedInfoWindow.API.yelp = 'error';
+				// Add the data in a way that trigger Knockout Observable
+				// var debug_result = self.infoWindows.splice(arrayIndex, 1, updatedInfoWindow);
+				// console.log('Error ', arrayIndex, yelpPlaceId);
+				// console.log('Inserted ', updatedInfoWindow);
+				// console.log('Spliced ', debug_result);
+				// console.log ('errorAjax ', updatedInfoWindow.API.yelp, updatedInfoWindow.content);
+			},
+			'complete' : function(xOptions, textStats) {
+				// Increment the ajax answers received counter
+				self.ajaxCallIndex = self.ajaxCallIndex + 1;
+				console.log(self.ajaxCallIndex);
+				// Check if every Ajax answers has been received
+				// Meaning a call has been made for each infoWindows
+				if (self.ajaxCallIndex === self.infoWindows().length) {
+					self.CreateMarkerObservableArray();
+				}
+			},
+		});
+	};
+
 	// Add all marker to the map
 	this.AddAllMarkers = function(markers) {
 		var delayMultiplier = 0;
@@ -76,7 +200,9 @@ var ViewModel = function() {
 	// Add one infowindow
 	this.AddOneInfoWindow = function(infowindowInfo, arrayIndex) {
 		// TODO: Add Yelp info ?
-		Model.googlemaps.service.getDetails({ placeId: infowindowInfo.placeId }, function(place, status) {
+
+		// Asking Google Place API & Google Street View (in the View) for information
+		Model.googlemaps.service.getDetails({ placeId: infowindowInfo.googlePlaceId }, function(place, status) {
 			if (status == google.maps.places.PlacesServiceStatus.OK) {
 
 				var validContent = View.LayoutInfoWindow(place);
@@ -85,10 +211,38 @@ var ViewModel = function() {
 					content: validContent
 					});
 
-				// Store the infowindow
-				self.infoWindows[arrayIndex] = infowindow;
+				// Add a variable to store the status of the google place API status
+				infowindow.API = {googlePlaces: 'success'};
+				// Store the infowindow in the right order & in a way that trigger Knockout Observable
+				self.infoWindows.splice(arrayIndex, 1, infowindow);
+
+				// Call the additional Yelp API (With a timeout to prevent being blocked as spam)
+				var yelpPlaceId = infowindowInfo.yelpPlaceId;
+				var yelpFunction = (function(index, yelpId){
+					return function() {
+						self.YelpRequest(yelpId, index);
+					};
+				})(arrayIndex, yelpPlaceId);
+				yelpFunction();
+
 			} else {
-				console.log(status);
+				// Create an empty infowindow
+				var infowindow = new google.maps.InfoWindow({
+					content: 'Google Places didn\'t load</br>'
+				});
+				// Add a variable to store the status of the google place API status
+				infowindow.API = {googlePlaces: 'error'};
+				// Store the infowindow in the right order & in a way that trigger Knockout Observable
+				self.infoWindows.splice(arrayIndex, 1, infowindow);
+
+				// Call the additional Yelp API (With a timeout to prevent being blocked as spam)
+				var yelpPlaceId = infowindowInfo.yelpPlaceId;
+				var yelpFunction = (function(index){
+					return function() {
+						self.YelpRequest(yelpPlaceId, index);
+					};
+				})(arrayIndex);
+				yelpFunction();
 			}
 		});
 	};
@@ -96,11 +250,15 @@ var ViewModel = function() {
 	// Add all infowindow
 	this.AddAllWindows = function(infowindows) {
 		// Memorize position in array
-		var index = 0;
 
+		// "Allocate" the self.infoWindows array
 		infowindows.forEach(function(infowindowInfo) {
+			self.infoWindows.push({});
+		});
+
+		infowindows.forEach(function(infowindowInfo, index) {
+			// Create the Ajax call required to get the data & store the infowindow data in self.infoWindows
 			self.AddOneInfoWindow(infowindowInfo, index);
-			index = index +1;
 		});
 	};
 
@@ -114,13 +272,11 @@ var ViewModel = function() {
 	};
 
 	this.CreateMarkerObservableArray = function() {
-		var index = 0;
-		self.markers.forEach(function(marker) {
+		self.markers().forEach(function(marker, index) {
 			var marker = ko.observable(marker);
-			var infoWindow = ko.observable(self.infoWindows[index]);
+			var infoWindow = ko.observable(self.infoWindows()[index]);
 			var checkbox = ko.observable(false);
 			self.MarkerArray.push({marker: marker, infoWindow: infoWindow, checkbox: checkbox});
-			index = index + 1;
 		});
 	};
 

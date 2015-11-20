@@ -5,31 +5,40 @@ var Model = {
 		service : null,
 		infowindows : [
 			{
-				placeId: "ChIJe2jeNttx5kcRi_mJsGHdkQc"
+				googlePlaceId: "ChIJe2jeNttx5kcRi_mJsGHdkQc",
+				yelpPlaceId: "jardin-du-luxembourg-paris"
 			},
 			{
-				placeId: "ChIJMxtaOMxx5kcR28SQEfSygUc"
+				googlePlaceId: "ChIJMxtaOMxx5kcR28SQEfSygUc",
+				yelpPlaceId: "cinéma-gaumont-parnasse-paris-3"
 			},
 			{
-				placeId: "ChIJOzl9Icxx5kcRWcga16oXZEw"
+				googlePlaceId: "ChIJOzl9Icxx5kcRWcga16oXZEw",
+				yelpPlaceId: "le-falstaff-paris"
 			},
 			{
-				placeId: "ChIJxy57Nudx5kcRbGtimYdLcrk"
+				googlePlaceId: "ChIJxy57Nudx5kcRbGtimYdLcrk",
+				yelpPlaceId: "album-paris-7"
 			},
 			{
-				placeId: "ChIJxy57Nudx5kcRcfSt_e_iADU"
+				googlePlaceId: "ChIJxy57Nudx5kcRcfSt_e_iADU",
+				yelpPlaceId: "album-paris-6"
 			},
 			{
-				placeId: "ChIJkYSjLedx5kcRaNJBiMaJRfk"
+				googlePlaceId: "ChIJkYSjLedx5kcRaNJBiMaJRfk",
+				yelpPlaceId: "pulps-paris"
 			},
 			{
-				placeId: "ChIJKZtiueZx5kcRl9zQESU6I9A"
+				googlePlaceId: "ChIJKZtiueZx5kcRl9zQESU6I9A",
+				yelpPlaceId: "marché-maubert-paris-2"
 			},
 			{
-				placeId: "ChIJ6_YgoOZx5kcRx_kUrl7wU7g"
+				googlePlaceId: "ChIJ6_YgoOZx5kcRx_kUrl7wU7g",
+				yelpPlaceId: "boucherie-parisienne-debray-paris"
 			},
 			{
-				placeId: "ChIJ4fRivuZx5kcR_nMndA0Lv24"
+				googlePlaceId: "ChIJ4fRivuZx5kcR_nMndA0Lv24",
+				yelpPlaceId: "laurent-dubois-paris-3"
 			}
 		],
 		markers : [
