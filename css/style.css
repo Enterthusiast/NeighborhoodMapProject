@@ -73,8 +73,15 @@ div.result-marker li:nth-child(odd) {
 .result-text {
 	display: flex;
 	align-items: center;
-	width: 100%;
+	width: 90%;
 	height: 30px;
+}
+.result-checkbox {
+	display: flex;
+	align-items: center;
+
+	width: 10%;
+	height: 20px;
 }
 
 .topbar {
@@ -110,7 +117,7 @@ div.result-marker li:nth-child(odd) {
 	flex-direction: column;
 	width: calc(100% - 280px);
 	height: 100%;
-	background-color: red;
+	background-color: white;
 }
 
 #map {
