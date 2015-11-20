@@ -34,6 +34,7 @@ var View = {
 			layoutContent = layoutContent + '<a class="infwin-website" href="' + place.url + '"><img src="https://s3-media2.fl.yelpcdn.com/assets/srv0/developer_pages/14f29ad24935/assets/img/yelp_logo_40x20.png"/></a>';
 		}
 		if (place.rating && place.rating_img_url_small) {
+			place.rating_img_url_small = place.rating_img_url_small.replace('http://', 'https://');
 			layoutContent = layoutContent + '<span class="infwin-yelp-rating"><img src="' + place.rating_img_url_small + '"/> ' + place.rating + '/5</span></br>';
 		}
 		return layoutContent;
