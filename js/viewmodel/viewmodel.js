@@ -129,7 +129,7 @@ var ViewModel = function() {
 		parameters.push(['oauth_signature_method', 'HMAC-SHA1']);
 
 		var message = {
-			'action' : 'http://api.yelp.com/v2/business/' + yelpPlaceId,
+			'action' : 'https://api.yelp.com/v2/business/' + yelpPlaceId,
 			'method' : 'GET',
 			'parameters' : parameters
 		};
