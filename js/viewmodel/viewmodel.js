@@ -1,10 +1,9 @@
-// TODO: Yelp API
-// TODO: Manage Pottential Error (like no data, no google, etc.)
+// TODO: Manage Pottential Error & Loading (like no data, no google, etc.)
 // TODO: localStorage
 // TODO: Better Comment
 // TODO: Grunt minify
-// TODO: Loading?
 
+// Yelp Callback
 var yelpCallback = function(data) {
 	console.log(data);
 	return true;
@@ -96,24 +95,9 @@ var ViewModel = function() {
 		self.markers.push(marker);
 	};
 
-	// Yelp toolbox
-	// Yelp Callback
-	this.YelpCallback = function(data) {
-		//Useless phantom function required for the API to work
-		console.log ('jsonpCallback');
-	};
-	// Yelp request counter (used prevent too many requests at the same time)
-	this.ajaxCall = [];
+	// Yelp ajax request counter
 	this.ajaxCallIndex = 0;
-	// Call the Yelp Ajax  request one by one
-	this.ajaxCalling = function(index) {
-		if (self.ajaxCall[index]) {
-			self.ajaxCall[index]();
-		} else if(index === self.ajaxCall.length) {
-			// When all calls has been done we store the data in the Marker Array, starting the app in the same process
-			self.CreateMarkerObservableArray();
-		}
-	};
+
 	// Yelp request builder
 	this.YelpRequest = function(yelpPlaceId, arrayIndex) {
 		// Building the Auth Message
@@ -137,9 +121,6 @@ var ViewModel = function() {
 			tokenSecret : auth.accessTokenSecret
 		};
 
-		// Store the callback function (prevent error in the URL)
-		var yelpCallback = self.YelpCallback;
-
 		parameters = [];
 		parameters.push(['callback', 'yelpCallback']);
 		parameters.push(['oauth_consumer_key', auth.consumerKey]);
@@ -160,54 +141,52 @@ var ViewModel = function() {
 		parameterMap.oauth_signature = OAuth.percentEncode(parameterMap.oauth_signature);
 
 		// Making the call!
-		self.ajaxCall.push(
-			(function(messageAction, parameterMap, arrayIndex, yelpPlaceId) {
-				return function() {
-					$.jsonp({
-						'url' : messageAction,
-						'data' : parameterMap,
-						'cache' : true,
-						'dataType' : 'jsonp',
-						//'jsonpCallback' : 'yelpCallback',
-						'callback' : 'yelpCallback',
-						'success' : function(data, textStats, XMLHttpRequest) {
-							// This is where we add the Yelp data to the infoWindows array
-							// Get the formated data
-							var validContent = View.LayoutInfoWindowYelp(data);
-							// Store and modify the data
-							var updatedInfoWindow = self.infoWindows()[arrayIndex];
-							updatedInfoWindow.content = updatedInfoWindow.content + validContent;
-							// Add a variable to store the status of the Yelp API request
-							updatedInfoWindow.API.yelp = 'success';
-							// Add the data in a way that trigger Knockout Observable
-							self.infoWindows.splice(arrayIndex, 1, updatedInfoWindow);
-						},
-						'error' : function(XMLHttpRequest, textStats, errorThrown) {
-							// This is where we add the Yelp data to the infoWindows array
-							// var updatedInfoWindow = self.infoWindows()[arrayIndex];
-							// Add a variable to store the status of the Yelp API request
-							// updatedInfoWindow.API.yelp = 'error';
-							// Add the data in a way that trigger Knockout Observable
-							// var debug_result = self.infoWindows.splice(arrayIndex, 1, updatedInfoWindow);
-							// console.log('Error ', arrayIndex, yelpPlaceId);
-							// console.log('Inserted ', updatedInfoWindow);
-							// console.log('Spliced ', debug_result);
-							// console.log ('errorAjax ', updatedInfoWindow.API.yelp, updatedInfoWindow.content);
-						},
-						'complete' : function(xOptions, textStats) {
-							// Call the next Ajax request
-							self.ajaxCallIndex = self.ajaxCallIndex + 1;
-							self.ajaxCalling(self.ajaxCallIndex);
-						},
-					});
-				};
-			})(message.action, parameterMap, arrayIndex, yelpPlaceId)
-		);
+		$.jsonp({
+			'url' : message.action,
+			'data' : parameterMap,
+			'cache' : true,
+			'dataType' : 'jsonp',
+			'callback' : 'yelpCallback',
+			'success' : function(data, textStats, XMLHttpRequest) {
+				// This is where we add the Yelp data to the infoWindows array
+				// Get the formated data
+				var validContent = View.LayoutInfoWindowYelp(data);
+				// Store and modify the data
+				var updatedInfoWindow = self.infoWindows()[arrayIndex];
+				updatedInfoWindow.content = updatedInfoWindow.content + validContent;
+				// Add a variable to store the status of the Yelp API request
+				updatedInfoWindow.API.yelp = 'success';
+				// Add the data in a way that trigger Knockout Observable
+				self.infoWindows.splice(arrayIndex, 1, updatedInfoWindow);
 
-		if (self.ajaxCall.length === self.infoWindows().length) {
-			self.ajaxCalling(self.ajaxCallIndex);
-		}
+				console.log(updatedInfoWindow);
+			},
+			'error' : function(XMLHttpRequest, textStats, errorThrown) {
 
+				console.log(textStats);
+
+				// This is where we add the Yelp data to the infoWindows array
+				// var updatedInfoWindow = self.infoWindows()[arrayIndex];
+				// Add a variable to store the status of the Yelp API request
+				// updatedInfoWindow.API.yelp = 'error';
+				// Add the data in a way that trigger Knockout Observable
+				// var debug_result = self.infoWindows.splice(arrayIndex, 1, updatedInfoWindow);
+				// console.log('Error ', arrayIndex, yelpPlaceId);
+				// console.log('Inserted ', updatedInfoWindow);
+				// console.log('Spliced ', debug_result);
+				// console.log ('errorAjax ', updatedInfoWindow.API.yelp, updatedInfoWindow.content);
+			},
+			'complete' : function(xOptions, textStats) {
+				// Increment the ajax answers received counter
+				self.ajaxCallIndex = self.ajaxCallIndex + 1;
+				console.log(self.ajaxCallIndex);
+				// Check if every Ajax answers has been received
+				// Meaning a call has been made for each infoWindows
+				if (self.ajaxCallIndex === self.infoWindows().length) {
+					self.CreateMarkerObservableArray();
+				}
+			},
+		});
 	};
 
 	// Add all marker to the map
@@ -239,11 +218,11 @@ var ViewModel = function() {
 
 				// Call the additional Yelp API (With a timeout to prevent being blocked as spam)
 				var yelpPlaceId = infowindowInfo.yelpPlaceId;
-				var yelpFunction = (function(index){
+				var yelpFunction = (function(index, yelpId){
 					return function() {
-						self.YelpRequest(yelpPlaceId, index);
+						self.YelpRequest(yelpId, index);
 					};
-				})(arrayIndex);
+				})(arrayIndex, yelpPlaceId);
 				yelpFunction();
 
 			} else {
@@ -271,7 +250,6 @@ var ViewModel = function() {
 	// Add all infowindow
 	this.AddAllWindows = function(infowindows) {
 		// Memorize position in array
-		var index = 0;
 
 		// "Allocate" the self.infoWindows array
 		infowindows.forEach(function(infowindowInfo) {
@@ -281,7 +259,6 @@ var ViewModel = function() {
 		infowindows.forEach(function(infowindowInfo, index) {
 			// Create the Ajax call required to get the data & store the infowindow data in self.infoWindows
 			self.AddOneInfoWindow(infowindowInfo, index);
-			index = index + 1;
 		});
 	};
 
@@ -295,13 +272,11 @@ var ViewModel = function() {
 	};
 
 	this.CreateMarkerObservableArray = function() {
-		var index = 0;
-		self.markers().forEach(function(marker) {
+		self.markers().forEach(function(marker, index) {
 			var marker = ko.observable(marker);
 			var infoWindow = ko.observable(self.infoWindows()[index]);
 			var checkbox = ko.observable(false);
 			self.MarkerArray.push({marker: marker, infoWindow: infoWindow, checkbox: checkbox});
-			index = index + 1;
 		});
 	};
 
