@@ -146,6 +146,31 @@ div.result-marker li:nth-child(odd) {
 
 }
 
+/* Loading/Error Screen */
+.loading {
+	display: inline;
+	position: fixed;
+	left: 0px;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	color: white;
+	background-color: black;
+}
+
+.loading-close {
+	display: none;
+}
+
+.loading-text {
+	display: flex;
+	align-items: center;
+  	justify-content: center;
+  	width: 100%;
+  	height: 100%;
+}
+
+
 @media (max-width: 600px) {
 	.menu {
 		display: inline;

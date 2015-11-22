@@ -1,13 +1,8 @@
-// TODO: Manage Pottential Error & Loading (like no data, no google, etc.)
+// TODO: Manage Potential Error & Loading (like no data, no google, etc.)
 // TODO: localStorage
 // TODO: Better Comment
 // TODO: Grunt minify
-
-// Yelp Callback
-var yelpCallback = function(data) {
-	console.log(data);
-	return true;
-};
+// TODO: add marker icons based on type of shop ?
 
 // Knockout ViewModel
 var ViewModel = function() {
@@ -78,7 +73,7 @@ var ViewModel = function() {
 
 	// Add One Marker to the map
 	this.AddOneMarker = function(markerInfo) {
-		// TODO: add marker icons based on type of shop ?
+
 		var marker = new google.maps.Marker({
 		    position : markerInfo.position,
 		    title : markerInfo.title,
@@ -158,31 +153,33 @@ var ViewModel = function() {
 				updatedInfoWindow.API.yelp = 'success';
 				// Add the data in a way that trigger Knockout Observable
 				self.infoWindows.splice(arrayIndex, 1, updatedInfoWindow);
-
-				console.log(updatedInfoWindow);
 			},
 			'error' : function(XMLHttpRequest, textStats, errorThrown) {
-
-				console.log(textStats);
-
-				// This is where we add the Yelp data to the infoWindows array
-				// var updatedInfoWindow = self.infoWindows()[arrayIndex];
+				// Store and modify the data
+				var updatedInfoWindow = self.infoWindows()[arrayIndex];
 				// Add a variable to store the status of the Yelp API request
-				// updatedInfoWindow.API.yelp = 'error';
+				updatedInfoWindow.API.yelp = 'error';
 				// Add the data in a way that trigger Knockout Observable
-				// var debug_result = self.infoWindows.splice(arrayIndex, 1, updatedInfoWindow);
-				// console.log('Error ', arrayIndex, yelpPlaceId);
-				// console.log('Inserted ', updatedInfoWindow);
-				// console.log('Spliced ', debug_result);
-				// console.log ('errorAjax ', updatedInfoWindow.API.yelp, updatedInfoWindow.content);
+				self.infoWindows.splice(arrayIndex, 1, updatedInfoWindow);
 			},
 			'complete' : function(xOptions, textStats) {
+				// If no data has been retrieved from both Yelp nor Google we add an error text to the infowindow.
+				// Get the data
+				var updatedInfoWindow = self.infoWindows()[arrayIndex];
+				// Check if it went wrong for both APIs
+				if (updatedInfoWindow.API.googlePlaces === 'error' && updatedInfoWindow.API.yelp === 'error') {
+					// Add a variable to store the status of the Yelp API request
+					updatedInfoWindow.content = updatedInfoWindow.content + 'Not able to retrieve more information';
+					// Add the data in a way that trigger Knockout Observable
+					self.infoWindows.splice(arrayIndex, 1, updatedInfoWindow);
+				}
+
 				// Increment the ajax answers received counter
 				self.ajaxCallIndex = self.ajaxCallIndex + 1;
-				console.log(self.ajaxCallIndex);
 				// Check if every Ajax answers has been received
 				// Meaning a call has been made for each infoWindows
 				if (self.ajaxCallIndex === self.infoWindows().length) {
+					// So we can now populate the Marker array
 					self.CreateMarkerObservableArray();
 				}
 			},
@@ -199,7 +196,6 @@ var ViewModel = function() {
 
 	// Add one infowindow
 	this.AddOneInfoWindow = function(infowindowInfo, arrayIndex) {
-		// TODO: Add Yelp info ?
 
 		// Asking Google Place API & Google Street View (in the View) for information
 		Model.googlemaps.service.getDetails({ placeId: infowindowInfo.googlePlaceId }, function(place, status) {
@@ -425,4 +421,10 @@ var AppInit = function() {
 	ko.applyBindings(new ViewModel);
 	var data = ko.dataFor(document.body);
 	data.Init();
+
+	// Remove the loading/error screen because obviously Google Map works and call this function
+	var loadingOverlay = document.getElementsByClassName('loading')[0];
+	if(loadingOverlay) {
+		loadingOverlay.className = loadingOverlay.className.replace('loading', 'loading-close');
+	}
 };
