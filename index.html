@@ -12,7 +12,7 @@
     <div class="flex-body">
       <div class="loading">
         <div class="loading-text">
-          Google Map is taking a long time to respond. You may want to check your connection.
+          Neighborhood Map is loading...
         </div>
       </div>
       <div class="menu">
@@ -60,6 +60,17 @@
     <script src="js/model/model.js"></script>
     <script src="js/view/view.js"></script>
     <script src="js/viewmodel/viewmodel.js"></script>
+
+    <!-- loading/error message code -->
+    <script>
+      // Getting the loading text
+      var loadingText = document.getElementsByClassName('loading-text')[0];
+      if(loadingText) {
+        setTimeout(function() {
+          loadingText.innerHTML = "Google Map is taking a long time to respond. You may want to check your connection and/or reload the page.";
+        }, 3000);
+      }
+    </script>
 
     <!-- call google map -->
     <script async defer

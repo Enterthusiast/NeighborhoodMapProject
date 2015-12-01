@@ -1,8 +1,6 @@
-// TODO: Manage Potential Error & Loading (like no data, no google, etc.)
-// TODO: localStorage
-// TODO: Better Comment
 // TODO: Grunt minify
-// TODO: add marker icons based on type of shop ?
+// TODO: localStorage
+// TODO: add marker icons based on type of shop?
 
 // Knockout ViewModel
 var ViewModel = function() {
@@ -26,49 +24,27 @@ var ViewModel = function() {
 
 	this.Init = function() {
 		// Initialize the map
-		Model.googlemaps.map = new google.maps.Map(document.getElementById('map'), {
+		Model.mapdata.map = new google.maps.Map(document.getElementById('map'), {
 			center: {lat: 48.846, lng: 2.337},
 			zoom: 15
 		});
 
 		// Initialize the places service
-		Model.googlemaps.service = new google.maps.places.PlacesService(Model.googlemaps.map);
-
-		// Subscribe to the markers and infoWindows array
-		// This way we can check that information has been correctly retrieved from APIs
-		self.markers.subscribe(function(data) {
-			self.APICallCheck(data, 'markers');
-		});
-		self.infoWindows.subscribe(function(data) {
-			self.APICallCheck(data, 'infoWindows');
-		});
-
+		Model.mapdata.service = new google.maps.places.PlacesService(Model.mapdata.map);
 
 		// Get data from Model and compute it
 		self.AddAllMarkers(self.GetMarkersInfo());
 		self.AddAllWindows(self.GetWindowsInfo());
-
-		// Store it in observable variables
-		//setTimeout(self.CreateMarkerObservableArray, 5000);
-	};
-
-	// Test data retrieved from API
-	this.APICallCheck = function(data, type) {
-		// console.log('Subscribed' + type);
-		// console.log(data);
-		// if(data[0] && data[0].API && data[0].API.googlePlaces && data[0].API.yelp) {
-		// 	console.log(data[0].API.googlePlaces + ' ' + data[0].API.yelp);
-		// }
 	};
 
 	// Return the source list of markers from Model
 	this.GetMarkersInfo = function() {
-		return Model.googlemaps.markers;
+		return Model.mapdata.markers;
 	};
 
 	// Return the source list of infowindows from Model
 	this.GetWindowsInfo = function() {
-		return Model.googlemaps.infowindows;
+		return Model.mapdata.infowindows;
 	};
 
 	// Add One Marker to the map
@@ -81,7 +57,7 @@ var ViewModel = function() {
 		});
 
 		// Set the marker on the map
-		marker.setMap(Model.googlemaps.map);
+		marker.setMap(Model.mapdata.map);
 
 		// Add a bhavior on click
 		marker.addListener('click', self.MarkerClicked);
@@ -196,9 +172,8 @@ var ViewModel = function() {
 
 	// Add one infowindow
 	this.AddOneInfoWindow = function(infowindowInfo, arrayIndex) {
-
 		// Asking Google Place API & Google Street View (in the View) for information
-		Model.googlemaps.service.getDetails({ placeId: infowindowInfo.googlePlaceId }, function(place, status) {
+		Model.mapdata.service.getDetails({ placeId: infowindowInfo.googlePlaceId }, function(place, status) {
 			if (status == google.maps.places.PlacesServiceStatus.OK) {
 
 				var validContent = View.LayoutInfoWindow(place);
@@ -220,7 +195,6 @@ var ViewModel = function() {
 					};
 				})(arrayIndex, yelpPlaceId);
 				yelpFunction();
-
 			} else {
 				// Create an empty infowindow
 				var infowindow = new google.maps.InfoWindow({
@@ -262,11 +236,13 @@ var ViewModel = function() {
 		self.MarkerArray().forEach(function(data) {
 			// Looking for the clicked marker by its position (Latitude & Longitude)
 			if(data.marker().position === event.latLng) {
+				// Highlighting the clicked marker (Colorize, Animated, open infowindow)
 				self.HighlightMarker(data);
 			}
 		});
 	};
 
+	// Store the complete information that was retrieved for a marker (marker, infowindow & checkbox)
 	this.CreateMarkerObservableArray = function() {
 		self.markers().forEach(function(marker, index) {
 			var marker = ko.observable(marker);
@@ -276,6 +252,7 @@ var ViewModel = function() {
 		});
 	};
 
+	// Filtering the marker with the user input
 	this.FilterMarkers = function(filter) {
 		// Close all infoWindow
 		self.CloseAllInfoWindow();
@@ -309,7 +286,7 @@ var ViewModel = function() {
 			if (re.test(data.marker().title)) {
 				// Display the marker on the map only if not already there (prevent blinking markers)
 				if(data.marker().map === null) {
-					data.marker().setMap(Model.googlemaps.map);
+					data.marker().setMap(Model.mapdata.map);
 				}
 				if (!isPinned) {
 					resultMarkerArray.push(data);
@@ -346,7 +323,7 @@ var ViewModel = function() {
 		// Close all infoWindow
 		self.CloseAllInfoWindow();
 		// Open the chosen infoWindow
-		clickedData.infoWindow().open(Model.googlemaps.map, clickedData.marker());
+		clickedData.infoWindow().open(Model.mapdata.map, clickedData.marker());
 	};
 
 	// Close all infoWindow
@@ -357,7 +334,7 @@ var ViewModel = function() {
 		});
 	};
 
-	// Animate a marker
+	// Colorize, animate a marker and open the associated infowindow
 	this.HighlightMarker = function(clickedData) {
 		// Stop any other animation
 		self.MarkerArray().forEach(function(data) {
@@ -422,7 +399,7 @@ var AppInit = function() {
 	var data = ko.dataFor(document.body);
 	data.Init();
 
-	// Remove the loading/error screen because obviously Google Map works and call this function
+	// Remove the loading/error screen because obviously Google Map works and called this function
 	var loadingOverlay = document.getElementsByClassName('loading')[0];
 	if(loadingOverlay) {
 		loadingOverlay.className = loadingOverlay.className.replace('loading', 'loading-close');

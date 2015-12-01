@@ -1,8 +1,11 @@
 var Model = {
 
-	googlemaps : {
+	// Hardcoded location data used for the API requests
+	mapdata : {
 		map : null,
 		service : null,
+		// Data used to build the infowindows
+		// Using Google Place and Yelp APIs
 		infowindows : [
 			{
 				googlePlaceId: "ChIJe2jeNttx5kcRi_mJsGHdkQc",
@@ -41,6 +44,7 @@ var Model = {
 				yelpPlaceId: "laurent-dubois-paris-3"
 			}
 		],
+		// Data used to build the marker
 		markers : [
 			{
 				position: {lat: 48.84620, lng: 2.33715},
