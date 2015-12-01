@@ -3,7 +3,7 @@ var View = {
 		// Store the InforWindow layout
 		var layoutContent = '';
 
-		// Check that every required field as data, then build an HTML code around it
+		// Check that every required field has data, then build an HTML code around it
 		if (place.geometry.location.lat() && place.geometry.location.lng()) {
 			layoutContent = layoutContent + '<div class="infwin-img"><img src="https://maps.googleapis.com/maps/api/streetview?size=200x200&location=' + place.geometry.location.lat() + ',' + place.geometry.location.lng() + '&key=AIzaSyC9V681P6SnJXI-5glxGhYipuRb9QiDtHM"/></div></br>';
 		}
@@ -26,7 +26,7 @@ var View = {
 	},
 
 	LayoutInfoWindowYelp : function(place) {
-		// Store the InforWindow layout (with mandatory Yelp logo)
+		// Store the InfoWindow layout (with mandatory Yelp logo)
 		var layoutContent = '';
 
 		// Check that every required field as data, then build an HTML code around it
