@@ -1,4 +1,6 @@
-*, *:before, *:after {
+*,
+*:before,
+*:after {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-ms-box-sizing: border-box;
@@ -11,7 +13,8 @@
 	padding: 0;
 }
 
-html, body {
+html,
+body {
 	height: 100%;
 }
 
@@ -21,7 +24,8 @@ html, body {
 	height: 100%;
 }
 
-.menu, .menu-open {
+.menu,
+.menu-open {
 	width: 280px;
 	height: 100%;
 	color: white;
@@ -37,45 +41,56 @@ html, body {
 	border-bottom: 1px solid;
 	border-right: 1px solid;
 }
+
 .filter-input {
 	display: flex;
 	align-items: center;
   	justify-content: center;
 	width: 100%;
 }
+
 .filter-text {
 	width: 90%;
 }
+
 .filter-submit {
 
 }
+
 .filter-marker {
 
 }
+
 .result-marker {
 	cursor: pointer;
 }
+
 div.result-marker li:nth-child(even) {
 	background: black;
 }
+
 div.result-marker li:nth-child(odd) {
 	background: #2e2e2e;
 }
+
 .result-li {
 	display: flex;
 }
+
 .flex-result-li {
 	display: flex;
 	align-items: center;
   	justify-content: center;
   	width: 100%;
 }
+
 .result-text {
 	display: flex;
 	align-items: center;
 	width: 90%;
 	height: 30px;
 }
+
 .result-checkbox {
 	display: flex;
 	align-items: center;
@@ -90,9 +105,11 @@ div.result-marker li:nth-child(odd) {
 	height: 50px;
 	background-color: black;
 }
+
 .topbar-menu-toggle {
 	display: none;
 }
+
 .topbar-title-box {
 	display: flex;
 	align-items: center;
@@ -130,18 +147,23 @@ div.result-marker li:nth-child(odd) {
 	margin-right: auto;
 	width: 200px;
 }
+
 .infwin-name {
 	font-weight: bold;
 }
+
 .infwin-adress {
 
 }
+
 .infwin-phone {
 
 }
+
 .infwin-rating {
 
 }
+
 .infwin-website {
 
 }
@@ -172,6 +194,7 @@ div.result-marker li:nth-child(odd) {
 
 
 @media (max-width: 600px) {
+
 	.menu {
 		display: inline;
 		position: fixed;
@@ -226,4 +249,21 @@ div.result-marker li:nth-child(odd) {
 		color: white;
 		height: 30px;
 	}
+
+}
+
+@media (max-width: 350px) {
+
+	.topbar-title {
+		font-size: 16px;
+	}
+
+}
+
+@media (max-width: 300px) {
+
+	.topbar-title {
+		font-size: 14px;
+	}
+
 }

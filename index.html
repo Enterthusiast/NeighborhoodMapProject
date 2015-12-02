@@ -12,7 +12,7 @@
     <div class="flex-body">
       <div class="loading">
         <div class="loading-text">
-          Neighborhood Map is loading...
+          <p>Neighborhood Map is loading...</p>
         </div>
       </div>
       <div class="menu">
@@ -26,7 +26,7 @@
             <ul data-bind="foreach: filteredMarkerArray">
               <li class="result-li">
                 <div class="flex-result-li">
-                  <div class="result-text" data-bind="text: marker().title, click: $parent.HighlightMarker"></div>
+                  <div class="result-text" data-bind="text: marker().title, click: $parent.highlightMarker"></div>
                   <input type="checkbox" class="result-checkbox" data-bind="checked: checkbox"/>
                 </div>
               </li>
@@ -40,7 +40,7 @@
             <h2 class="topbar-title">Favorite places in my neighborhood</h2>
           </div>
           <div class="topbar-menu-toggle">
-            <div class="topbar-menu-toggle-icon" data-bind="text: icon, click: ToggleMenu"></div>
+            <div class="topbar-menu-toggle-icon" data-bind="text: icon, click: toggleMenu"></div>
           </div>
         </div>
         <div id="map"></div>
@@ -74,7 +74,7 @@
 
     <!-- call google map -->
     <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9V681P6SnJXI-5glxGhYipuRb9QiDtHM&libraries=places&callback=AppInit"></script>
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9V681P6SnJXI-5glxGhYipuRb9QiDtHM&libraries=places&callback=appInit"></script>
     </script>
 
 </body>
