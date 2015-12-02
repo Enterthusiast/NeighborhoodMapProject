@@ -364,13 +364,15 @@ var ViewModel = function() {
 		// Animate the desired marker (only if not animating)
 		if(clickedData.marker().animation === false || !clickedData.marker().animation) {
 			clickedData.marker().setAnimation(google.maps.Animation.BOUNCE);
-			clickedData.marker().setIcon('https://mt.google.com/vt/icon?psize=34&font=fonts/Roboto-Regular.ttf&color=ff343434&name=icons/spotlight/spotlight-waypoint-a.png&ax=44&ay=48&scale=1&text=%E2%80%A2');
 
 			// Stop anymation after a short time
 			setTimeout(function() {
 					clickedData.marker().setAnimation(null);
 				}, 1400);
 		}
+
+		// Color the marker in green
+		clickedData.marker().setIcon('https://mt.google.com/vt/icon?psize=34&font=fonts/Roboto-Regular.ttf&color=ff343434&name=icons/spotlight/spotlight-waypoint-a.png&ax=44&ay=48&scale=1&text=%E2%80%A2');
 
 		// Open the marker infowindow
 		self.openInfoWindow(clickedData);
