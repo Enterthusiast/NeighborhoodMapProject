@@ -1,3 +1,5 @@
+'use strict';
+
 // TODO: Grunt minify
 // TODO: localStorage
 // TODO: add marker icons based on type of shop?
@@ -22,33 +24,24 @@ var ViewModel = function() {
 	this.markers = ko.observableArray([]);
 	this.infoWindows = ko.observableArray([]);
 
-	this.Init = function() {
-		// Initialize the map
-		Model.mapdata.map = new google.maps.Map(document.getElementById('map'), {
-			center: {lat: 48.846, lng: 2.337},
-			zoom: 15
-		});
-
-		// Initialize the places service
-		Model.mapdata.service = new google.maps.places.PlacesService(Model.mapdata.map);
-
+	this.init = function() {
 		// Get data from Model and compute it
-		self.AddAllMarkers(self.GetMarkersInfo());
-		self.AddAllWindows(self.GetWindowsInfo());
+		self.addAllMarkers(self.getMarkersInfo());
+		self.addAllWindows(self.getWindowsInfo());
 	};
 
 	// Return the source list of markers from Model
-	this.GetMarkersInfo = function() {
+	this.getMarkersInfo = function() {
 		return Model.mapdata.markers;
 	};
 
 	// Return the source list of infowindows from Model
-	this.GetWindowsInfo = function() {
+	this.getWindowsInfo = function() {
 		return Model.mapdata.infowindows;
 	};
 
 	// Add One Marker to the map
-	this.AddOneMarker = function(markerInfo) {
+	this.addOneMarker = function(markerInfo) {
 
 		var marker = new google.maps.Marker({
 		    position : markerInfo.position,
@@ -59,8 +52,11 @@ var ViewModel = function() {
 		// Set the marker on the map
 		marker.setMap(Model.mapdata.map);
 
+		// Add the marker to the bounds
+		Model.mapdata.bounds.extend(new google.maps.LatLng(markerInfo.position));
+
 		// Add a bhavior on click
-		marker.addListener('click', self.MarkerClicked);
+		marker.addListener('click', self.markerClicked);
 
 		// Store the marker
 		self.markers.push(marker);
@@ -70,7 +66,7 @@ var ViewModel = function() {
 	this.ajaxCallIndex = 0;
 
 	// Yelp request builder
-	this.YelpRequest = function(yelpPlaceId, arrayIndex) {
+	this.yelpRequest = function(yelpPlaceId, arrayIndex) {
 		// Building the Auth Message
 		var auth = {
 			//
@@ -92,7 +88,7 @@ var ViewModel = function() {
 			tokenSecret : auth.accessTokenSecret
 		};
 
-		parameters = [];
+		var parameters = [];
 		parameters.push(['callback', 'yelpCallback']);
 		parameters.push(['oauth_consumer_key', auth.consumerKey]);
 		parameters.push(['oauth_consumer_secret', auth.consumerSecret]);
@@ -121,7 +117,7 @@ var ViewModel = function() {
 			'success' : function(data, textStats, XMLHttpRequest) {
 				// This is where we add the Yelp data to the infoWindows array
 				// Get the formated data
-				var validContent = View.LayoutInfoWindowYelp(data);
+				var validContent = Model.LayoutInfoWindowYelp(data);
 				// Store and modify the data
 				var updatedInfoWindow = self.infoWindows()[arrayIndex];
 				updatedInfoWindow.content = updatedInfoWindow.content + validContent;
@@ -143,9 +139,9 @@ var ViewModel = function() {
 				// Get the data
 				var updatedInfoWindow = self.infoWindows()[arrayIndex];
 				// Check if it went wrong for both APIs
-				if (updatedInfoWindow.API.googlePlaces === 'error' && updatedInfoWindow.API.yelp === 'error') {
+				if (updatedInfoWindow.API.yelp === 'error') {
 					// Add a variable to store the status of the Yelp API request
-					updatedInfoWindow.content = updatedInfoWindow.content + 'Not able to retrieve more information';
+					updatedInfoWindow.content = updatedInfoWindow.content + '<i>Yelp didn\'t load </i>';
 					// Add the data in a way that trigger Knockout Observable
 					self.infoWindows.splice(arrayIndex, 1, updatedInfoWindow);
 				}
@@ -156,69 +152,75 @@ var ViewModel = function() {
 				// Meaning a call has been made for each infoWindows
 				if (self.ajaxCallIndex === self.infoWindows().length) {
 					// So we can now populate the Marker array
-					self.CreateMarkerObservableArray();
+					self.createMarkerObservableArray();
 				}
 			},
 		});
 	};
 
 	// Add all marker to the map
-	this.AddAllMarkers = function(markers) {
+	this.addAllMarkers = function(markers) {
 		var delayMultiplier = 0;
-		markers.forEach(function(markerInfo) {
-  			self.AddOneMarker(markerInfo);
+		markers.forEach(function(markerInfo, index) {
+  			self.addOneMarker(markerInfo);
+
+  			if (markers.length - 1 === index) {
+  				Model.mapdata.map.fitBounds(Model.mapdata.bounds);
+  			}
 		});
 	};
 
 	// Add one infowindow
-	this.AddOneInfoWindow = function(infowindowInfo, arrayIndex) {
+	this.addOneInfoWindow = function(infowindowInfo, arrayIndex) {
+
+		// Build the Yelp API call function
+		var yelpPlaceId = infowindowInfo.yelpPlaceId;
+		var yelpFunction = (function(index, yelpId){
+			return function() {
+				self.yelpRequest(yelpId, index);
+			};
+		})(arrayIndex, yelpPlaceId);
+
 		// Asking Google Place API & Google Street View (in the View) for information
 		Model.mapdata.service.getDetails({ placeId: infowindowInfo.googlePlaceId }, function(place, status) {
 			if (status == google.maps.places.PlacesServiceStatus.OK) {
-
-				var validContent = View.LayoutInfoWindow(place);
-
+				// Build & store the HTML containing the Google Place information
+				var validContent = Model.LayoutInfoWindow(place);
 				var infowindow = new google.maps.InfoWindow({
 					content: validContent
-					});
-
+				});
 				// Add a variable to store the status of the google place API status
 				infowindow.API = {googlePlaces: 'success'};
+				// Add a callback to the infowindow close event: stop marker animation and set their color back to red
+				google.maps.event.addListener(infowindow,'closeclick',function(){
+				   self.closeInfoWindowCallback();
+				});
 				// Store the infowindow in the right order & in a way that trigger Knockout Observable
 				self.infoWindows.splice(arrayIndex, 1, infowindow);
 
-				// Call the additional Yelp API (With a timeout to prevent being blocked as spam)
-				var yelpPlaceId = infowindowInfo.yelpPlaceId;
-				var yelpFunction = (function(index, yelpId){
-					return function() {
-						self.YelpRequest(yelpId, index);
-					};
-				})(arrayIndex, yelpPlaceId);
+				// Call the additional Yelp API
 				yelpFunction();
 			} else {
 				// Create an empty infowindow
 				var infowindow = new google.maps.InfoWindow({
-					content: 'Google Places didn\'t load</br>'
+					content: '<i>Google Places didn\'t load </i></br>'
 				});
 				// Add a variable to store the status of the google place API status
 				infowindow.API = {googlePlaces: 'error'};
+				google.maps.event.addListener(infowindow,'closeclick',function(){
+				   self.closeInfoWindowCallback();
+				});
 				// Store the infowindow in the right order & in a way that trigger Knockout Observable
 				self.infoWindows.splice(arrayIndex, 1, infowindow);
 
-				// Call the additional Yelp API (With a timeout to prevent being blocked as spam)
-				var yelpPlaceId = infowindowInfo.yelpPlaceId;
-				var yelpFunction = (function(index){
-					return function() {
-						self.YelpRequest(yelpPlaceId, index);
-					};
-				})(arrayIndex);
+				// Call the additional Yelp API
 				yelpFunction();
 			}
 		});
 	};
 
 	// Add all infowindow
-	this.AddAllWindows = function(infowindows) {
+	this.addAllWindows = function(infowindows) {
 		// Memorize position in array
 
 		// "Allocate" the self.infoWindows array
@@ -228,22 +230,22 @@ var ViewModel = function() {
 
 		infowindows.forEach(function(infowindowInfo, index) {
 			// Create the Ajax call required to get the data & store the infowindow data in self.infoWindows
-			self.AddOneInfoWindow(infowindowInfo, index);
+			self.addOneInfoWindow(infowindowInfo, index);
 		});
 	};
 
-	this.MarkerClicked = function(event) {
+	this.markerClicked = function(event) {
 		self.MarkerArray().forEach(function(data) {
 			// Looking for the clicked marker by its position (Latitude & Longitude)
 			if(data.marker().position === event.latLng) {
 				// Highlighting the clicked marker (Colorize, Animated, open infowindow)
-				self.HighlightMarker(data);
+				self.highlightMarker(data);
 			}
 		});
 	};
 
 	// Store the complete information that was retrieved for a marker (marker, infowindow & checkbox)
-	this.CreateMarkerObservableArray = function() {
+	this.createMarkerObservableArray = function() {
 		self.markers().forEach(function(marker, index) {
 			var marker = ko.observable(marker);
 			var infoWindow = ko.observable(self.infoWindows()[index]);
@@ -253,9 +255,9 @@ var ViewModel = function() {
 	};
 
 	// Filtering the marker with the user input
-	this.FilterMarkers = function(filter) {
+	this.filterMarkers = function(filter) {
 		// Close all infoWindow
-		self.CloseAllInfoWindow();
+		self.closeAllInfoWindow();
 
 		// Using a regular expression for a more permissive & flexible filter
 		var re = new RegExp(filter, "i");
@@ -303,12 +305,13 @@ var ViewModel = function() {
 		// Store previous results size
 		var filteredArrayLength = self.filteredMarkerArray().length;
 
+		var marker, infoWindow, checkbox, newData = null;
 		// Store the results in filteredMarkersArray
 		resultMarkerArray.forEach(function(data) {
-			var marker = ko.observable(data.marker());
-			var infoWindow = ko.observable(data.infoWindow());
-			var checkbox = ko.observable(data.checkbox());
-			var newData = {marker: marker, infoWindow: infoWindow, checkbox: checkbox};
+			marker = ko.observable(data.marker());
+			infoWindow = ko.observable(data.infoWindow());
+			checkbox = ko.observable(data.checkbox());
+			newData = {marker: marker, infoWindow: infoWindow, checkbox: checkbox};
 			self.filteredMarkerArray.push(newData);
 		});
 
@@ -319,29 +322,42 @@ var ViewModel = function() {
 	};
 
 	// Open an infowindow
-	this.OpenInfoWindow = function(clickedData) {
+	this.openInfoWindow = function(clickedData) {
 		// Close all infoWindow
-		self.CloseAllInfoWindow();
+		self.closeAllInfoWindow();
 		// Open the chosen infoWindow
 		clickedData.infoWindow().open(Model.mapdata.map, clickedData.marker());
 	};
 
 	// Close all infoWindow
-	this.CloseAllInfoWindow = function(clickedData) {
+	this.closeAllInfoWindow = function(clickedData) {
 		// Close all infowindow stored in MarkerArray
 		self.MarkerArray().forEach(function(data) {
 			data.infoWindow().close();
 		});
 	};
 
+	// Stop markers animation and set them back to red color after an infowindow is closed
+	this.closeInfoWindowCallback = function() {
+		self.MarkerArray().forEach(function(data) {
+			// We stop ongoing marker animations
+			if(data.marker().animating === true) {
+				data.marker().setAnimation(null);
+			}
+			// Set the icon back to the standard one (red)
+			data.marker().setIcon(null);
+		});
+	}
+
 	// Colorize, animate a marker and open the associated infowindow
-	this.HighlightMarker = function(clickedData) {
+	this.highlightMarker = function(clickedData) {
 		// Stop any other animation
 		self.MarkerArray().forEach(function(data) {
 			// We only stop ongoing animation and we won't stop the clicked marker animation (if any)
 			if(data.marker().animating === true && data.marker() !== clickedData.marker()) {
 				data.marker().setAnimation(null);
 			}
+			// Set the icon back to the standard one (red)
 			data.marker().setIcon(null);
 		});
 
@@ -357,14 +373,14 @@ var ViewModel = function() {
 		}
 
 		// Open the marker infowindow
-		self.OpenInfoWindow(clickedData);
+		self.openInfoWindow(clickedData);
 
 		// Close the menu on mobile to get a quick view of the selected place.
-		self.CloseMenu();
+		self.closeMenu();
 	},
 
 	// Open or close mobile menu
-	this.ToggleMenu = function() {
+	this.toggleMenu = function() {
 		var menuOpen = document.getElementsByClassName('menu-open')[0];
 		var menu = document.getElementsByClassName('menu')[0];
 		if(menuOpen) {
@@ -377,7 +393,7 @@ var ViewModel = function() {
 	};
 
 	// Close the mobile menu
-	this.CloseMenu = function() {
+	this.closeMenu = function() {
 		var menuOpen = document.getElementsByClassName('menu-open')[0];
 		if(menuOpen) {
 			menuOpen.className = menuOpen.className.replace('menu-open','');
@@ -387,17 +403,29 @@ var ViewModel = function() {
 
 	// Filter the places list when the filter change
 	this.triggerFilter = ko.computed(function() {
-				return self.FilterMarkers(self.filter().trim());
-			});
+				return self.filterMarkers(self.filter().trim());
+	});
 
 };
 
 // Create the map, start Knockout
-var AppInit = function() {
+var appInit = function() {
+	// Initialize the map
+	Model.mapdata.map = new google.maps.Map(document.getElementById('map'), {
+		center: {lat: 48.846, lng: 2.337},
+		zoom: 15
+	});
+
+	// Initialize the places service
+	Model.mapdata.service = new google.maps.places.PlacesService(Model.mapdata.map);
+
+	// Initialize bounds
+	Model.mapdata.bounds = new google.maps.LatLngBounds();
+
 	// KO Init
 	ko.applyBindings(new ViewModel);
 	var data = ko.dataFor(document.body);
-	data.Init();
+	data.init();
 
 	// Remove the loading/error screen because obviously Google Map works and called this function
 	var loadingOverlay = document.getElementsByClassName('loading')[0];
@@ -405,3 +433,8 @@ var AppInit = function() {
 		loadingOverlay.className = loadingOverlay.className.replace('loading', 'loading-close');
 	}
 };
+
+// Keeping markers on screen
+window.onresize = function() {
+	Model.mapdata.map.fitBounds(Model.mapdata.bounds);
+}
